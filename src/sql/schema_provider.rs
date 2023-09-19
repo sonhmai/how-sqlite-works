@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use arrow_schema::{DataType, Field, Schema};
-use datafusion_common::{DataFusionError, plan_err, Result};
 use datafusion_common::config::ConfigOptions;
-use datafusion_expr::{AggregateUDF, ScalarUDF, TableSource, WindowUDF};
+use datafusion_common::{plan_err, DataFusionError, Result};
 use datafusion_expr::builder::LogicalTableSource;
+use datafusion_expr::{AggregateUDF, ScalarUDF, TableSource, WindowUDF};
 use datafusion_sql::planner::ContextProvider;
 use datafusion_sql::TableReference;
 
@@ -17,7 +17,7 @@ pub struct SchemaProvider {
 
 fn create_table_source(fields: Vec<Field>) -> Arc<dyn TableSource> {
     Arc::new(LogicalTableSource::new(Arc::new(
-        Schema::new_with_metadata(fields, HashMap::new())
+        Schema::new_with_metadata(fields, HashMap::new()),
     )))
 }
 
@@ -33,9 +33,7 @@ impl SchemaProvider {
                 Field::new("color", DataType::Utf8, false),
             ]),
         );
-        SchemaProvider {
-            tables
-        }
+        SchemaProvider { tables }
     }
 }
 
@@ -67,4 +65,3 @@ impl ContextProvider for SchemaProvider {
         todo!()
     }
 }
-
