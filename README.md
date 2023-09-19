@@ -2,7 +2,7 @@
 Rewriting SQLite in Rust for Learning and Fun
 
 ```
-cargo run -- sql sample.db "select name from table"
+cargo run -- sql sample.db "select name from apples"
 ```
 
 ## TODO
@@ -15,3 +15,8 @@ cargo run -- sql sample.db "select name from table"
 
 ### Write Path
 to be implemented later
+
+
+## Architecture
+
+SQL string -> Logical Plan: datafusion-sql

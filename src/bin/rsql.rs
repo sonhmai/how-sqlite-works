@@ -1,7 +1,14 @@
 use clap::{App, Arg, SubCommand};
-use rsql::model::database::Database;
+use datafusion_sql::{
+    sqlparser::{dialect::SQLiteDialect, parser::Parser}
+};
+use datafusion_sql::planner::SqlToRel;
+use datafusion_sql::sqlparser::ast::Statement;
+use datafusion_sql::sqlparser::dialect::AnsiDialect;
 
+use rsql::model::database::Database;
 use rsql::model::table::Table;
+use rsql::sql::schema_provider::SchemaProvider;
 
 fn main() {
     let matches = App::new("rust-sqlite")
@@ -21,7 +28,18 @@ fn main() {
                 name: "hardcoded".to_string()
             };
             let db = Database::new(db);
-            println!("Executing {sqlstr} against db {:?}, table {:?}", db, table)
+            println!("Executing '{sqlstr}' against db {db:?}, table {table:?}");
+
+            // sql to unoptimized logical plan
+            let dialect = AnsiDialect {};
+            let ast: Vec<Statement> = Parser::parse_sql(&dialect, sqlstr).unwrap();
+            let statement = &ast[0];
+            // create logical query plan
+            let schema_provider = SchemaProvider::new();
+            let sql_to_rel = SqlToRel::new(&schema_provider);
+            let plan = sql_to_rel.sql_statement_to_plan(statement.clone()).unwrap();
+            println!("{plan:?}");
+
         }
         _ => unreachable!()
     }

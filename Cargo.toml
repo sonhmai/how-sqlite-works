@@ -7,3 +7,8 @@ edition = "2021"
 
 [dependencies]
 clap = "2.32.0"
+datafusion-sql = "31.0.0" # parsing sql to logical plan
+datafusion-common = "31.0.0"
+datafusion-expr = "31.0.0"
+arrow-schema = "46.0.0"
+log = "^0.4"
