@@ -1,7 +1,8 @@
 use clap::{App, Arg, SubCommand};
 
-fn main() {
+use rsql::model::table::Table;
 
+fn main() {
     let matches = App::new("rust-sqlite")
         .subcommand(
             SubCommand::with_name("sql")
@@ -15,7 +16,10 @@ fn main() {
         ("sql", Some(_matches)) => {
             let db = _matches.value_of("db").unwrap();
             let sqlstr = _matches.value_of("sql").unwrap();
-            println!("Executing {sqlstr} against {db}")
+            let table = Table {
+                name: "hardcoded".to_string()
+            };
+            println!("Executing {sqlstr} against {db}, table {:?}", table)
         }
         _ => unreachable!()
     }
