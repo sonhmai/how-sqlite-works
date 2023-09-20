@@ -2,6 +2,12 @@
 Rewriting SQLite in Rust for Learning and Fun
 
 ```
+# run tests
+cargo test
+# showing warnings and stdout
+cargo test -- --nocapture
+
+# execute program against a sqlite database
 cargo run -- sql sample.db "select name from apples"
 ```
 
