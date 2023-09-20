@@ -33,8 +33,12 @@ Aggregation
 
 Component
 - [x] basic SQL to Logical Plan
-- [ ] basic Logical Plan execution
-- [ ] execute Logical Plan output by `datafusion-sql`
+- [x] basic Logical Plan execution
+- [x] physical plan
+- [ ] ColumnValue and DataRecord
+- [ ] Parsing database
+- [ ] Parsing table
+- [ ] replace hardcoded ExecApplesScan by actual sqlite table scan
 
 
 ### Write Path
