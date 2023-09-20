@@ -1,4 +1,3 @@
-
 /// Decode varint and return (varint, bytes_read)
 /// https://carlmastrangelo.com/blog/lets-make-a-varint
 /// Varint: a way of compressing down ints into smaller space than normally needed.

@@ -4,7 +4,7 @@ use std::io::BufRead;
 pub struct DataRecord {
     serial_types: Vec<u8>,
     num_header_bytes: u8,
-    rowid: Option<u32>,
+    rowid: Option<u64>,
 }
 
 impl DataRecord {
