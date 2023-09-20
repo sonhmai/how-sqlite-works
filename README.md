@@ -2,7 +2,15 @@
 Rewriting SQLite in Rust for Learning and Fun
 
 ```
+# run tests
+cargo test
+# showing warnings and stdout
+cargo test -- --nocapture
+
+# execute program against a sqlite database
 cargo run -- sql sample.db "select name from apples"
+# suppress warnings
+RUSTFLAGS=-Awarnings cargo run -- sql sample.db "select name from apples"
 ```
 
 ## TODO
@@ -24,6 +32,8 @@ Aggregation
 - [ ] Average
 
 Component
+- [x] basic SQL to Logical Plan
+- [ ] basic Logical Plan execution
 - [ ] execute Logical Plan output by `datafusion-sql`
 
 

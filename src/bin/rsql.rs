@@ -6,7 +6,7 @@ use datafusion_sql::sqlparser::{dialect::SQLiteDialect, parser::Parser};
 
 use rsql::model::database::Database;
 use rsql::model::table::Table;
-use rsql::physical::executor::Executor;
+use rsql::physical::physical_planner::PhysicalPlanner;
 use rsql::sql::schema_provider::SchemaProvider;
 
 fn main() {
@@ -38,8 +38,10 @@ fn main() {
             let schema_provider = SchemaProvider::new();
             let sql_to_rel = SqlToRel::new(&schema_provider);
             let logical_plan = sql_to_rel.sql_statement_to_plan(statement.clone()).unwrap();
-            let executor = Executor {};
-            executor.execute(logical_plan);
+            let physical_planner = PhysicalPlanner {};
+            let exec = physical_planner.plan(logical_plan);
+            let records = exec.execute();
+            println!("Returned records: {records:?}")
         }
         _ => unreachable!(),
     }
