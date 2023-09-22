@@ -13,3 +13,6 @@ datafusion-expr = "31.0.0"
 arrow-schema = "46.0.0"
 log = "^0.4"
 anyhow = "1.0.75"
+
+[dev-dependencies]
+hex = "^0.4" # 0.4.*
