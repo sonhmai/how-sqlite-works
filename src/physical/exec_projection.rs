@@ -11,6 +11,8 @@ pub struct ExecProjection {
 }
 
 impl Exec for ExecProjection {
+
+    // TODO project by column name
     fn execute(&self) -> Vec<DataRecord> {
         // why use into_iter() here instead of iter()?
         // https://www.becomebetterprogrammer.com/rust-iter-vs-iter_mut-vs-into_iter/

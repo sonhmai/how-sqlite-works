@@ -11,6 +11,9 @@ cargo test -- --nocapture
 cargo run -- sql sample.db "select name from apples"
 # suppress warnings
 RUSTFLAGS=-Awarnings cargo run -- sql sample.db "select name from apples"
+
+# see what returns by sqlite
+sqlite3 sample.db "select * from apples"
 ```
 
 ## TODO
@@ -18,8 +21,8 @@ RUSTFLAGS=-Awarnings cargo run -- sql sample.db "select name from apples"
 ### Read Path
 
 Projection
-- [ ] select * from table1
-- [ ] select col1 from table1
+- [x] select * from table1
+- [ ] Implement Project by Column Name in ExecProjection: select col1 from table1
 - [ ] select col1, col2 from table1
 
 Selection
