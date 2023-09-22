@@ -1,3 +1,4 @@
+mod column;
 pub mod data_record;
 pub mod database;
 pub mod db_meta;
