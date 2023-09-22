@@ -3,7 +3,13 @@
 /// Varint: a way of compressing down ints into smaller space than normally needed.
 /// Trade-off of varint
 ///     - spend more bits on larger numbers, fewer bits on smaller number
-///     - e.g. a 64 bit integer that is almost always less than 256 would be wasting the top 56 bits of a fixed width representation
+///     - e.g. a 64 bit integer that is almost always less than 256 would be wasting
+///     the top 56 bits of a fixed width representation
+///
+/// Args
+///     bytes: &[u8] shared ref to a byte array because we don't need to modify it.
+/// Returns
+///     (i64, usize) these basic types are Copy -> values are copies to diff memory location
 pub fn decode_varint(bytes: &[u8]) -> (i64, usize) {
     let mut varint = 0;
     let mut bytes_read = 0;
