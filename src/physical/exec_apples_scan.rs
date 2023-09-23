@@ -1,4 +1,4 @@
-use crate::model::column::ColumnValue;
+use crate::model::column_value::ColumnValue;
 use crate::model::data_record::DataRecord;
 use crate::physical::exec::Exec;
 

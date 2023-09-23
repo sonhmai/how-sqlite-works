@@ -1,4 +1,4 @@
-use crate::model::column::ColumnValue;
+use crate::model::column_value::ColumnValue;
 use crate::varint::decode_varint;
 
 // https://github.com/bert2/build-your-own-sqlite-rust/blob/master/src/format/record.rs
