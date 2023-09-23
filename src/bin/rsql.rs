@@ -7,7 +7,7 @@ use datafusion_sql::sqlparser::{dialect::SQLiteDialect, parser::Parser};
 use rsql::model::database::Database;
 use rsql::model::table::Table;
 use rsql::physical::physical_planner::PhysicalPlanner;
-use rsql::sql::schema_provider::SchemaProvider;
+use rsql::sql::context_provider::SqliteContextProvider;
 
 fn main() {
     let matches = App::new("rust-sqlite")
@@ -35,7 +35,7 @@ fn main() {
             let ast: Vec<Statement> = Parser::parse_sql(&dialect, sqlstr).unwrap();
             let statement = &ast[0];
             // create logical query plan
-            let schema_provider = SchemaProvider::new();
+            let schema_provider = SqliteContextProvider::new();
             let sql_to_rel = SqlToRel::new(&schema_provider);
             let logical_plan = sql_to_rel.sql_statement_to_plan(statement.clone()).unwrap();
             let physical_planner = PhysicalPlanner {};
