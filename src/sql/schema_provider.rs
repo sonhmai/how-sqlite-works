@@ -13,6 +13,7 @@ use datafusion_sql::TableReference;
 /// Here the schema is hardcoded. It should be parsed from the db file
 pub struct SchemaProvider {
     tables: HashMap<String, Arc<dyn TableSource>>,
+    options: ConfigOptions
 }
 
 fn create_table_source(fields: Vec<Field>) -> Arc<dyn TableSource> {
@@ -33,7 +34,7 @@ impl SchemaProvider {
                 Field::new("color", DataType::Utf8, false),
             ]),
         );
-        SchemaProvider { tables }
+        SchemaProvider { tables, options:  Default::default()}
     }
 }
 
@@ -46,22 +47,22 @@ impl ContextProvider for SchemaProvider {
     }
 
     fn get_function_meta(&self, name: &str) -> Option<Arc<ScalarUDF>> {
-        todo!()
+        None // we don't add any ScalarUDF
     }
 
     fn get_aggregate_meta(&self, name: &str) -> Option<Arc<AggregateUDF>> {
-        todo!()
+        None
     }
 
     fn get_window_meta(&self, name: &str) -> Option<Arc<WindowUDF>> {
-        todo!()
+        None
     }
 
     fn get_variable_type(&self, variable_names: &[String]) -> Option<DataType> {
-        todo!()
+        None
     }
 
     fn options(&self) -> &ConfigOptions {
-        todo!()
+        &self.options
     }
 }
