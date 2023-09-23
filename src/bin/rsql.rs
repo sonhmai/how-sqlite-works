@@ -27,7 +27,7 @@ fn main() {
         ("sql", Some(_matches)) => {
             let db_file_path = _matches.value_of("db_file_path").unwrap();
             let sqlstr = _matches.value_of("sql").unwrap();
-            let db = Database::new(db_file_path);
+            let db = Database::new(db_file_path).unwrap();
             println!("Executing '{sqlstr}' against db {db:?}");
 
             // sql to unoptimized logical plan
