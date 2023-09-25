@@ -1,6 +1,6 @@
 use crate::model::data_record::DataRecord;
-use crate::physical::exec::Exec;
-use datafusion_expr::Expr;
+use crate::physical::plan::exec::Exec;
+use crate::physical::expression::physical_expr::PhysicalExpr;
 
 /// A projection determines which columns or expressions are returned from a query.
 ///
@@ -16,7 +16,7 @@ pub struct ExecProjection {
     // SourceScan, CsvScan, SqliteTableScan, etc.
     pub(crate) input: Box<dyn Exec>,
     // expressions to be projected on the returned row
-    pub(crate) expressions: Vec<Expr>,
+    pub(crate) expressions: Vec<Box<dyn PhysicalExpr>>,
 }
 
 impl Exec for ExecProjection {

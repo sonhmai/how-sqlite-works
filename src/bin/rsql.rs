@@ -39,7 +39,7 @@ fn main() {
             let sql_to_rel = SqlToRel::new(&schema_provider);
             let logical_plan = sql_to_rel.sql_statement_to_plan(statement.clone()).unwrap();
             let physical_planner = PhysicalPlanner {};
-            let exec = physical_planner.plan(logical_plan);
+            let exec = physical_planner.plan(&logical_plan);
             let records = exec.execute();
             println!("Returned records: {records:?}")
         }

@@ -1,5 +1,5 @@
 use crate::model::data_record::DataRecord;
-use crate::physical::exec::Exec;
+use crate::physical::plan::exec::Exec;
 
 pub struct ExecDummy {}
 
