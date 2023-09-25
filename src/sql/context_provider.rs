@@ -9,10 +9,15 @@ use datafusion_expr::{AggregateUDF, ScalarUDF, TableSource, WindowUDF};
 use datafusion_sql::planner::ContextProvider;
 use datafusion_sql::TableReference;
 
+/// SqliteContextProvider is an extension of datafusion ContextProvider
+/// for providing Catalog, Table, Schema, UDFs, etc. of sqlite and custom ones.
 ///
-/// Here the schema is hardcoded. It should be parsed from the db file
-pub struct SchemaProvider {
+/// https://arrow.apache.org/datafusion/library-user-guide/catalogs.html
+///
+/// Here the schema is hardcoded. It should be parsed from the db file.
+pub struct SqliteContextProvider {
     tables: HashMap<String, Arc<dyn TableSource>>,
+    options: ConfigOptions
 }
 
 fn create_table_source(fields: Vec<Field>) -> Arc<dyn TableSource> {
@@ -21,8 +26,10 @@ fn create_table_source(fields: Vec<Field>) -> Arc<dyn TableSource> {
     )))
 }
 
-impl SchemaProvider {
-    pub fn new() -> SchemaProvider {
+impl SqliteContextProvider {
+    pub fn new() -> SqliteContextProvider {
+        // TODO parse tables and their schemas from sqlite db file
+
         let mut tables = HashMap::new();
         // inserting the tables existed in sample.db
         tables.insert(
@@ -33,11 +40,11 @@ impl SchemaProvider {
                 Field::new("color", DataType::Utf8, false),
             ]),
         );
-        SchemaProvider { tables }
+        SqliteContextProvider { tables, options:  Default::default()}
     }
 }
 
-impl ContextProvider for SchemaProvider {
+impl ContextProvider for SqliteContextProvider {
     fn get_table_provider(&self, name: TableReference) -> Result<Arc<dyn TableSource>> {
         match self.tables.get(name.table()) {
             Some(tableSource) => Ok(tableSource.clone()),
@@ -46,22 +53,22 @@ impl ContextProvider for SchemaProvider {
     }
 
     fn get_function_meta(&self, name: &str) -> Option<Arc<ScalarUDF>> {
-        todo!()
+        None // we don't add any ScalarUDF
     }
 
     fn get_aggregate_meta(&self, name: &str) -> Option<Arc<AggregateUDF>> {
-        todo!()
+        None
     }
 
     fn get_window_meta(&self, name: &str) -> Option<Arc<WindowUDF>> {
-        todo!()
+        None
     }
 
     fn get_variable_type(&self, variable_names: &[String]) -> Option<DataType> {
-        todo!()
+        None
     }
 
     fn options(&self) -> &ConfigOptions {
-        todo!()
+        &self.options
     }
 }

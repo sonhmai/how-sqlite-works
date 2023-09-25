@@ -1,6 +1,6 @@
-use crate::model::column::ColumnValue;
+use crate::model::column_value::ColumnValue;
 use crate::model::data_record::DataRecord;
-use crate::physical::exec::Exec;
+use crate::physical::plan::exec::Exec;
 
 ///
 /// A hard-coded scan physical operator for testing
