@@ -15,7 +15,6 @@ impl Exec for ExecApplesScan {
                     ColumnValue::Text(b"Granny Smith"),
                     ColumnValue::Text(b"Light Green"),
                 ],
-                num_header_bytes: 0,
                 rowid: Some(1),
             },
             DataRecord {
@@ -23,7 +22,6 @@ impl Exec for ExecApplesScan {
                     ColumnValue::Text(b"Fuji"),
                     ColumnValue::Text(b"Red"),
                 ],
-                num_header_bytes: 0,
                 rowid: Some(2),
             },
             DataRecord {
@@ -31,7 +29,6 @@ impl Exec for ExecApplesScan {
                     ColumnValue::Text(b"Honeycrisp"),
                     ColumnValue::Text(b"Blush Red"),
                 ],
-                num_header_bytes: 0,
                 rowid: Some(3),
             },
             DataRecord {
@@ -39,7 +36,6 @@ impl Exec for ExecApplesScan {
                     ColumnValue::Text(b"Golden Delicious"),
                     ColumnValue::Text(b"Yellow"),
                 ],
-                num_header_bytes: 0,
                 rowid: Some(4),
             },
         ]

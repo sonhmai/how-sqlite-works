@@ -8,7 +8,6 @@ use crate::varint::decode_varint;
 #[derive(Debug)]
 pub struct DataRecord<'a> {
     pub values: Vec<ColumnValue<'a>>,
-    pub num_header_bytes: u8,
     pub rowid: Option<u64>,
 }
 
@@ -35,7 +34,6 @@ impl DataRecord<'_> {
         DataRecord {
             values: col_values,
             rowid: Some(rowid),
-            num_header_bytes: header_size.try_into().unwrap(),
         }
     }
 }
@@ -59,7 +57,6 @@ fn test_parse_record() {
     let payload = hex::decode("0402001700B168656C6C6F").unwrap();
     let record = DataRecord::parse_from(1, &payload);
     println!("{record:?}");
-    assert_eq!(record.num_header_bytes, 4);
     assert_eq!(record.rowid, Some(1));
     assert_eq!(record.values[0], ColumnValue::Int16([0, 177]));
     assert_eq!(record.values[1], ColumnValue::Null);
