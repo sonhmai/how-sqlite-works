@@ -36,6 +36,10 @@ impl DataRecord<'_> {
             rowid: Some(rowid),
         }
     }
+
+    pub fn value_at_index(&self, index: usize) -> &ColumnValue {
+        &self.values[index]
+    }
 }
 
 #[test]
@@ -61,4 +65,11 @@ fn test_parse_record() {
     assert_eq!(record.values[0], ColumnValue::Int16([0, 177]));
     assert_eq!(record.values[1], ColumnValue::Null);
     assert_eq!(record.values[2], ColumnValue::Text(b"hello"));
+}
+
+#[test]
+fn value_at_index() {
+    let payload = hex::decode("0402001700B168656C6C6F").unwrap();
+    let record = DataRecord::parse_from(1, &payload);
+    assert_eq!(*record.value_at_index(1), ColumnValue::Null);
 }
