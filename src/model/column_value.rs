@@ -32,7 +32,8 @@ use anyhow::Result;
 
 // https://github.com/richardmarbach/codecrafters-sqlite-rust/blob/master/src/record.rs#L110
 // https://github.com/bert2/build-your-own-sqlite-rust/blob/master/src/format/col_content.rs
-#[derive(Debug, PartialEq)]
+// TODO optimize - copy for string and bytes values are costly, ok for the rest (int, float,...)
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ColumnValue<'a> {
     Null,
     Int8([u8; 1]),

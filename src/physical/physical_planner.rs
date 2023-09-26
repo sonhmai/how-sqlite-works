@@ -42,7 +42,7 @@ impl PhysicalPlanner {
                     input: Box::new(ExecApplesScan {}),
                     expressions: physical_expressions,
                 })
-            },
+            }
             _ => {
                 println!("error executing plan {logical_plan:#?}");
                 // TODO make return type Result with error
@@ -50,19 +50,23 @@ impl PhysicalPlanner {
             }
         }
     }
-
 }
 
 pub fn create_physical_expr(
     logical_expr: &datafusion_expr::Expr,
-    input: &LogicalPlan
+    input: &LogicalPlan,
 ) -> anyhow::Result<Box<dyn PhysicalExpr>> {
     match logical_expr {
         datafusion_expr::Expr::Column(col) => {
             let schema = input.schema();
             let col_index = schema.index_of_column(&col)?;
-            Ok(Box::new(PhysicalColByIndex{col_index}))
-        },
+            Ok(Box::new(PhysicalColByIndex { col_index }))
+        }
         _ => bail!("cannot create physical expr from {logical_expr}")
     }
+}
+
+#[test]
+fn test_create_case_expr() {
+
 }

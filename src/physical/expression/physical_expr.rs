@@ -1,2 +1,8 @@
+use crate::model::column_value::ColumnValue;
+use crate::model::data_record::DataRecord;
 
-pub trait PhysicalExpr {}
+pub trait PhysicalExpr {
+    // returns ColumnValue not &ColumnValue because we want the value to be copied
+    // so it can be owned by others, not owned by the initial record
+    fn evaluate(&self, record: &DataRecord) -> ColumnValue;
+}

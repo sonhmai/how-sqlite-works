@@ -37,8 +37,8 @@ impl DataRecord<'_> {
         }
     }
 
-    pub fn value_at_index(&self, index: usize) -> &ColumnValue {
-        &self.values[index]
+    pub fn value_at_index(&self, index: usize) -> ColumnValue {
+        self.values[index]
     }
 }
 
@@ -71,5 +71,5 @@ fn test_parse_record() {
 fn value_at_index() {
     let payload = hex::decode("0402001700B168656C6C6F").unwrap();
     let record = DataRecord::parse_from(1, &payload);
-    assert_eq!(*record.value_at_index(1), ColumnValue::Null);
+    assert_eq!(record.value_at_index(1), ColumnValue::Null);
 }
