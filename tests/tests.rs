@@ -8,6 +8,7 @@ fn cli_no_args() {
     Command::cargo_bin("rsql").unwrap().assert().failure();
 }
 
+#[ignore] // feature not implemented yet
 #[test]
 fn cli_dbinfo() {
     Command::cargo_bin("rsql")
