@@ -40,6 +40,7 @@ pub enum ColumnValue {
     Int8([u8; 1]),
     Int16([u8; 2]),
     Int24([u8; 3]),
+    // Int32([u8; 4]),
     Int32([u8; 4]),
     Int48([u8; 6]),
     Int64([u8; 8]),
@@ -61,6 +62,10 @@ pub enum ColumnValue {
 }
 
 impl ColumnValue {
+
+    pub fn int32(int: i32) -> ColumnValue {
+        ColumnValue::Int32(int.to_be_bytes())
+    }
 
     /// Parses column value from bytes.
     /// https://www.sqlite.org/fileformat.html#record_format
