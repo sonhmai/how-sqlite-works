@@ -36,7 +36,10 @@ impl PhysicalPlanner {
                 let physical_expressions = logical_proj
                     .expr
                     .iter()
-                    .map(|logical_expr| create_physical_expr(&logical_expr, logical_plan).expect("cannot parse physical expr"))
+                    .map(|logical_expr|
+                        // knowing that logical plan is Projection having only 1 input -> access idx 0
+                        create_physical_expr(&logical_expr, logical_plan.inputs()[0]
+                        ).expect("cannot parse physical expr"))
                     .collect();
                 Box::new(ExecProjection {
                     input: Box::new(ExecApplesScan {}),

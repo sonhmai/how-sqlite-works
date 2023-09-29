@@ -12,6 +12,7 @@ impl Exec for ExecApplesScan {
         vec![
             DataRecord {
                 values: vec![
+                    ColumnValue::int32(1),
                     ColumnValue::Text("Granny Smith".to_owned()),
                     ColumnValue::Text("Light Green".to_owned()),
                 ],
@@ -19,6 +20,7 @@ impl Exec for ExecApplesScan {
             },
             DataRecord {
                 values: vec![
+                    ColumnValue::int32(2),
                     ColumnValue::Text("Fuji".to_owned()),
                     ColumnValue::Text("Red".to_owned()),
                 ],
@@ -26,6 +28,7 @@ impl Exec for ExecApplesScan {
             },
             DataRecord {
                 values: vec![
+                    ColumnValue::int32(3),
                     ColumnValue::Text("Honeycrisp".to_owned()),
                     ColumnValue::Text("Blush Red".to_owned()),
                 ],
@@ -33,6 +36,7 @@ impl Exec for ExecApplesScan {
             },
             DataRecord {
                 values: vec![
+                    ColumnValue::int32(4),
                     ColumnValue::Text("Golden Delicious".to_owned()),
                     ColumnValue::Text("Yellow".to_owned()),
                 ],

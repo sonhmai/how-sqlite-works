@@ -1,3 +1,4 @@
+use crate::model::column_value::ColumnValue;
 use crate::model::data_record::DataRecord;
 use crate::physical::plan::exec::Exec;
 use crate::physical::expression::physical_expr::PhysicalExpr;
@@ -19,9 +20,21 @@ pub struct ExecProjection {
     pub(crate) expressions: Vec<Box<dyn PhysicalExpr>>,
 }
 
-impl Exec for ExecProjection {
-
+impl ExecProjection {
     // TODO project by column name
+    fn project(&self, record: &DataRecord) -> DataRecord {
+        let mut values: Vec<ColumnValue> = vec![];
+        for expr in &self.expressions {
+            values.push(expr.evaluate(record));
+        }
+        DataRecord {
+            values,
+            rowid: record.rowid,
+        }
+    }
+}
+
+impl Exec for ExecProjection {
     fn execute(&self) -> Vec<DataRecord> {
         // why use into_iter() here instead of iter()?
         // https://www.becomebetterprogrammer.com/rust-iter-vs-iter_mut-vs-into_iter/
@@ -30,7 +43,7 @@ impl Exec for ExecProjection {
         self.input
             .execute()
             .into_iter()
-            .map(|record| return record)
+            .map(|record| self.project(&record))
             .collect()
     }
 }

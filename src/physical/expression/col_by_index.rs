@@ -1,8 +1,8 @@
-use std::io::Read;
 use crate::model::column_value::ColumnValue;
 use crate::model::data_record::DataRecord;
 use crate::physical::expression::physical_expr::PhysicalExpr;
 
+#[derive(Debug)]
 pub struct PhysicalColByIndex {
     // index of the column in the record values
     pub(crate) col_index: usize,
@@ -33,16 +33,27 @@ impl PhysicalExpr for PhysicalColByIndex {
 
 #[test]
 fn test_col_index() {
-    let col_by_index = PhysicalColByIndex { col_index: 1 };
     let data_record = DataRecord {
         values: vec![
             ColumnValue::Text("Granny Smith".to_owned()),
             ColumnValue::Text("Light Green".to_owned()),
+            ColumnValue::Text("3".to_owned()),
         ],
         rowid: Some(1),
     };
+
     assert_eq!(
-        col_by_index.evaluate(&data_record),
+        PhysicalColByIndex { col_index: 1 }.evaluate(&data_record),
         ColumnValue::Text("Light Green".to_owned())
-    )
+    );
+
+    assert_eq!(
+        PhysicalColByIndex { col_index: 0 }.evaluate(&data_record),
+        ColumnValue::Text("Granny Smith".to_owned())
+    );
+
+    assert_eq!(
+        PhysicalColByIndex { col_index: 2 }.evaluate(&data_record),
+        ColumnValue::Text("3".to_owned())
+    );
 }
