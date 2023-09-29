@@ -6,12 +6,12 @@ use crate::varint::decode_varint;
 /// DataRecord needs a lifetime parameter 'a to tell the compiler that Vec values
 /// has the same lifetime a as owning struct DataRecord
 #[derive(Debug)]
-pub struct DataRecord<'a> {
-    pub values: Vec<ColumnValue<'a>>,
+pub struct DataRecord {
+    pub values: Vec<ColumnValue>,
     pub rowid: Option<u64>,
 }
 
-impl DataRecord<'_> {
+impl DataRecord {
 
     /// parse_from parses a DataRecord from a slice of bytes (database file byte stream)
     ///
@@ -64,7 +64,7 @@ fn test_parse_record() {
     assert_eq!(record.rowid, Some(1));
     assert_eq!(record.values[0], ColumnValue::Int16([0, 177]));
     assert_eq!(record.values[1], ColumnValue::Null);
-    assert_eq!(record.values[2], ColumnValue::Text(b"hello"));
+    assert_eq!(record.values[2], ColumnValue::Text("hello".to_owned()));
 }
 
 #[test]
