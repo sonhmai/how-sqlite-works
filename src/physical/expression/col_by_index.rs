@@ -20,8 +20,6 @@ impl PhysicalExpr for PhysicalColByIndex {
         // has the same data as the original value.
 
         // The new value will have a new owner, and the original value will retain its ownership.
-        // TODO convert DataRecord to ColumnValue
-        // ColumnValue::Int8(*b"4")
         match record.value_at_index(self.col_index) {
             ColumnValue::Text(value) => ColumnValue::Text(value.clone()),
             ColumnValue::Blob(value) => ColumnValue::Blob(value.clone()),
