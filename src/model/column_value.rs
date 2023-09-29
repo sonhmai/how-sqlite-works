@@ -1,3 +1,4 @@
+use std::str::from_utf8;
 ///
 /// https://www.sqlite.org/datatype3.html
 /// Each value stored in an SQLite database (or manipulated by the database engine) has one of the following storage classes:
@@ -33,8 +34,8 @@ use anyhow::Result;
 // https://github.com/richardmarbach/codecrafters-sqlite-rust/blob/master/src/record.rs#L110
 // https://github.com/bert2/build-your-own-sqlite-rust/blob/master/src/format/col_content.rs
 // TODO optimize - copy for string and bytes values are costly, ok for the rest (int, float,...)
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum ColumnValue<'a> {
+#[derive(Debug, PartialEq, Clone)]
+pub enum ColumnValue {
     Null,
     Int8([u8; 1]),
     Int16([u8; 2]),
@@ -45,16 +46,21 @@ pub enum ColumnValue<'a> {
     Float64([u8; 8]),
     Zero,
     One,
-    // 2 options for bytes of Blob: use &[u8] or Box<[u8]>.
+    // 2 options for bytes of Blob: use &[u8] or Box<[u8]> because we don't know the size
+    // of byte array at compile time so we need a pointer (reference).
     // Because the bytes of blob and text are in the db file bytes already and no need to modify,
     // let's ref to that with a shared reference &[u8].
     // We need a lifetime specifier param 'a to tell the compiler that the lifetime of
     // u8 slices of Blob or Text have the same lifetime with the owning ColumnValue value.
-    Blob(&'a [u8]),
-    Text(&'a [u8]),
+    // Blob(&'a [u8]),
+
+    // switching from &'a [u8] to Box<u8> because I don't want to specify lifetime 'a.
+    // Bytes of Blob and Text are created on the heap.
+    Blob(Vec<u8>),
+    Text(String),
 }
 
-impl ColumnValue<'_> {
+impl ColumnValue {
 
     /// Parses column value from bytes.
     /// https://www.sqlite.org/fileformat.html#record_format
@@ -72,11 +78,19 @@ impl ColumnValue<'_> {
             9 => (ColumnValue::One, 0),
             n if n >= 12 && n % 2 == 0 => {
                 let len = ((n - 12) / 2).try_into()?;
-                (ColumnValue::Blob(&stream[..len]), len)
+                (ColumnValue::Blob(stream[..len].try_into()?), len)
             }
             n if n >= 13 && n % 2 == 1 => {
                 let len = ((n - 13) / 2).try_into()?;
-                (ColumnValue::Text(&stream[..len]), len)
+                // This function returns a Cow<'a, str>. If our byte slice is invalid UTF-8,
+                // then we need to insert the replacement characters, which will change
+                // the size of the string, and hence, require a String.
+                // But if it’s already valid UTF-8, we don’t need a new allocation.
+                // This return type allows us to handle both cases.
+                //
+                // Use from_utf8_unchecked for faster perf without the check overhead
+                let value = String::from_utf8_lossy(&stream[..len]).to_string();
+                (ColumnValue::Text(value), len)
             }
             n => panic!("Invalid serial type: {}", n),
         })
@@ -106,12 +120,12 @@ fn test_parse_col_value_one() {
 
 #[test]
 fn test_parse_col_value_blob() {
-    // one byte len 1 * 2 + 12 = 14
+    // one byte br'0000_0001' = b'1' -> len 1 * 2 + 12 = 14
     // should parse only first byte, ignore second byte
     let (value, size) =
         ColumnValue::parse(14, b"12").unwrap();
     assert_eq!(size, 1);
-    assert_eq!(value, ColumnValue::Blob(b"1"));
+    assert_eq!(value, ColumnValue::Blob(vec!(b'1')));
 }
 
 #[test]
@@ -120,5 +134,5 @@ fn test_parse_col_value_text() {
     // should parse only hello, ignore hi
     let (value, size) = ColumnValue::parse(23, b"hellohi").unwrap();
     assert_eq!(size, 5);
-    assert_eq!(value, ColumnValue::Text(b"hello"));
+    assert_eq!(value, ColumnValue::Text("hello".to_owned()));
 }
