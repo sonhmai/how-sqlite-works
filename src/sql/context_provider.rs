@@ -17,7 +17,7 @@ use datafusion_sql::TableReference;
 /// Here the schema is hardcoded. It should be parsed from the db file.
 pub struct SqliteContextProvider {
     tables: HashMap<String, Arc<dyn TableSource>>,
-    options: ConfigOptions
+    options: ConfigOptions,
 }
 
 fn create_table_source(fields: Vec<Field>) -> Arc<dyn TableSource> {
@@ -40,7 +40,10 @@ impl SqliteContextProvider {
                 Field::new("color", DataType::Utf8, false),
             ]),
         );
-        SqliteContextProvider { tables, options:  Default::default()}
+        SqliteContextProvider {
+            tables,
+            options: Default::default(),
+        }
     }
 }
 

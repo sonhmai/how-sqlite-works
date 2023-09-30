@@ -1,6 +1,6 @@
-use std::fmt::Debug;
 use crate::model::column_value::ColumnValue;
 use crate::model::data_record::DataRecord;
+use std::fmt::Debug;
 
 pub trait PhysicalExpr: Debug {
     // returns ColumnValue not &ColumnValue because we want the value to be copied

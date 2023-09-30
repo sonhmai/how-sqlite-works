@@ -1,7 +1,7 @@
 use crate::model::column_value::ColumnValue;
 use crate::model::data_record::DataRecord;
-use crate::physical::plan::exec::Exec;
 use crate::physical::expression::physical_expr::PhysicalExpr;
+use crate::physical::plan::exec::Exec;
 
 /// A projection determines which columns or expressions are returned from a query.
 ///
