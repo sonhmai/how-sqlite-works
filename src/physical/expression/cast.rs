@@ -12,6 +12,4 @@ impl PhysicalExpr for PhysicalCast {
 }
 
 #[test]
-fn cast_float_to_int() {
-
-}
+fn cast_float_to_int() {}

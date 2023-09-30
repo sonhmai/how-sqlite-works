@@ -12,7 +12,6 @@ pub struct DataRecord {
 }
 
 impl DataRecord {
-
     /// parse_from parses a DataRecord from a slice of bytes (database file byte stream)
     ///
     /// # Arguments

@@ -1,4 +1,3 @@
-use std::str::from_utf8;
 ///
 /// https://www.sqlite.org/datatype3.html
 /// Each value stored in an SQLite database (or manipulated by the database engine) has one of the following storage classes:
@@ -14,6 +13,7 @@ use std::str::from_utf8;
 /// Any column in an SQLite version 3 database, except an INTEGER PRIMARY KEY column,
 /// may be used to store a value of any storage class.
 use anyhow::Result;
+use std::str::from_utf8;
 //
 // #[derive(Debug)]
 // enum ColumnType {
@@ -62,7 +62,6 @@ pub enum ColumnValue {
 }
 
 impl ColumnValue {
-
     pub fn int32(int: i32) -> ColumnValue {
         ColumnValue::Int32(int.to_be_bytes())
     }
@@ -127,8 +126,7 @@ fn test_parse_col_value_one() {
 fn test_parse_col_value_blob() {
     // one byte br'0000_0001' = b'1' -> len 1 * 2 + 12 = 14
     // should parse only first byte, ignore second byte
-    let (value, size) =
-        ColumnValue::parse(14, b"12").unwrap();
+    let (value, size) = ColumnValue::parse(14, b"12").unwrap();
     assert_eq!(size, 1);
     assert_eq!(value, ColumnValue::Blob(vec!(b'1')));
 }

@@ -1,13 +1,13 @@
 use anyhow::bail;
 use datafusion_expr::LogicalPlan;
 
+use crate::physical::expression::col_by_index::PhysicalColByIndex;
+use crate::physical::expression::physical_expr::PhysicalExpr;
 use crate::physical::plan::exec::Exec;
 use crate::physical::plan::exec_apples_scan::ExecApplesScan;
 use crate::physical::plan::exec_dummy::ExecDummy;
 use crate::physical::plan::exec_projection::ExecProjection;
 use crate::physical::plan::exec_scan::ExecScan;
-use crate::physical::expression::col_by_index::PhysicalColByIndex;
-use crate::physical::expression::physical_expr::PhysicalExpr;
 
 pub struct PhysicalPlanner {}
 
@@ -38,7 +38,7 @@ impl PhysicalPlanner {
                     .iter()
                     .map(|logical_expr|
                         // knowing that logical plan is Projection having only 1 input -> access idx 0
-                        create_physical_expr(&logical_expr, logical_plan.inputs()[0]
+                        create_physical_expr(&logical_expr, logical_plan.inputs()[0],
                         ).expect("cannot parse physical expr"))
                     .collect();
                 Box::new(ExecProjection {
@@ -65,11 +65,9 @@ pub fn create_physical_expr(
             let col_index = schema.index_of_column(&col)?;
             Ok(Box::new(PhysicalColByIndex { col_index }))
         }
-        _ => bail!("cannot create physical expr from {logical_expr}")
+        _ => bail!("cannot create physical expr from {logical_expr}"),
     }
 }
 
 #[test]
-fn test_create_case_expr() {
-
-}
+fn test_create_case_expr() {}

@@ -1,4 +1,3 @@
-
 use assert_cmd::prelude::*;
 use predicates::ord::eq;
 use std::process::Command;
@@ -19,12 +18,15 @@ fn cli_dbinfo() {
         .stdout(eq("database page size: 4096"));
 }
 
-
 #[test]
 fn cli_sql_group_by_count() {
     Command::cargo_bin("rsql")
         .unwrap()
-        .args(&["sql", "sample.db", "select color, count(color) from apples group by color;"])
+        .args(&[
+            "sql",
+            "sample.db",
+            "select color, count(color) from apples group by color;",
+        ])
         .assert()
         .success();
 }

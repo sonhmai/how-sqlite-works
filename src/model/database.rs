@@ -1,6 +1,6 @@
+use anyhow::Result;
 use std::fs::File;
 use std::io::Read;
-use anyhow::Result;
 
 const MAGIC_HEADER: [u8; 16] = *b"SQLite format 3\0";
 const ROOT_PAGE_OFFSET: u8 = 100;
@@ -29,13 +29,11 @@ impl Database {
         Database::parse(&buf)
     }
 
-    pub fn parse(stream: &[u8]) -> Result<Self> { Ok(
-        Self {
+    pub fn parse(stream: &[u8]) -> Result<Self> {
+        Ok(Self {
             file_path: None,
             page_size: u16::from_be_bytes(stream[16..18].try_into()?),
-            db_page_count: u32::from_be_bytes(stream[28..32].try_into()?)
-        }
-    )
-
+            db_page_count: u32::from_be_bytes(stream[28..32].try_into()?),
+        })
     }
 }

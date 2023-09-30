@@ -26,7 +26,7 @@ impl PhysicalExpr for PhysicalColByIndex {
             ColumnValue::Null => ColumnValue::Null,
             ColumnValue::One => ColumnValue::One,
             ColumnValue::Zero => ColumnValue::Zero,
-            col => col.clone()
+            col => col.clone(),
         }
     }
 }
