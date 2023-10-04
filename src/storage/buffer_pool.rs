@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::model::database::Database;
 use crate::model::page::Page;
 use crate::model::page_id::PageId;
 
@@ -9,11 +10,12 @@ use crate::model::page_id::PageId;
 /// Then transaction fetches a page, it checks whether transaction has lock.
 pub struct BufferPool {
     // current not supporting concurrency
-    page_map: HashMap<PageId, Page>
+    page_map: HashMap<PageId, Page>,
+    database: &'static Database,
 }
 
 impl BufferPool {
-    pub fn get_page(page_id: PageId) -> Page {
-        todo!()
+    pub fn get_page(&self, page_id: PageId) -> Page {
+        self.database.read_page(page_id)
     }
 }
