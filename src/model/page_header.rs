@@ -1,16 +1,17 @@
 use std::u8;
+
 use anyhow::{bail, Result};
 
 // https://github.com/richardmarbach/codecrafters-sqlite-rust/blob/master/src/page.rs#L161
 // https://github.com/bert2/build-your-own-sqlite-rust/blob/master/src/format/page_header.rs
 #[derive(Debug)]
-pub struct PageHeader{
+pub struct PageHeader {
     pub page_type: PageType,
     pub first_free_block_start: u16,
     pub number_of_cells: u16,
     pub content_start_offset: u16,
     pub fragmented_free_bytes: u8,
-    pub right_child_page_number: Option<u32>
+    pub right_child_page_number: Option<u32>,
 }
 
 impl PageHeader {
@@ -58,7 +59,7 @@ impl PageHeader {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum PageType {
     InteriorIndex = 2,
     InteriorTable = 5,
