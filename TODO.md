@@ -4,7 +4,8 @@
 
 Scan
 - [x] Implement DbHeader
-- [x] SqliteContextProvider: parse db header from file for tables and schemas
+- [ ] How to parse tables and schemas from db file first page.
+- [ ] SqliteContextProvider: parse db header from file for tables and schemas
 - [ ] ExecScan: implement Physical TableScan
 
 Projection
