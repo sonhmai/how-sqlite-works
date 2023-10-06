@@ -6,6 +6,10 @@ Scan
 - [x] Implement DbHeader
 - [ ] How to parse tables and schemas from db file first page.
 - [ ] SqliteContextProvider: parse db header from file for tables and schemas
+  - [ ] Implement DbMeta to be able to parse DbHeader and schema objects
+  - [ ] From schema objects we can get table (name, cols, data types) for SqliteContextProvider
+  - [ ] Implement this conversion in SqliteContextProvider::new, 
+  potentially we need to convert sqlite type to arrow_schema types.
 - [ ] ExecScan: implement Physical TableScan
 
 Projection

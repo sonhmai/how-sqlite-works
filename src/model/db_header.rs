@@ -1,7 +1,7 @@
 use std::fmt;
-use anyhow::{Result, bail};
 
-const ROOT_PAGE_OFFSET: usize = 100;
+use anyhow::{bail, Result};
+
 const NUM_CELL_OFFSET: u8 = 3;
 
 /// The database text encoding.
@@ -56,6 +56,11 @@ pub struct DbHeader {
 }
 
 impl DbHeader {
+    pub const SIZE: usize = 100;
+    // the offset of root page for sqlite_schema table
+    // is after to db header (size = 100)
+    pub const ROOT_PAGE_OFFSET: usize = DbHeader::SIZE;
+
     pub fn parse(stream: &[u8]) -> Result<Self> {
         Ok(Self {
             header_string: String::from_utf8_lossy(&stream[..16]).to_string(),
@@ -93,7 +98,8 @@ impl DbHeader {
 mod tests {
     use std::fs;
     use std::path::PathBuf;
-    use crate::model::db_header::{DbHeader, Enc, ROOT_PAGE_OFFSET};
+
+    use crate::model::db_header::{DbHeader, Enc};
 
     #[test]
     fn test_parse_header_sample_db() {

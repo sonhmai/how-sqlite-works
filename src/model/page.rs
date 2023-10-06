@@ -15,6 +15,13 @@ pub struct Page {
     pub page_id: PageId,
 }
 
+/// The first page is special because it contains
+/// the sqlite_schema table.
+#[derive(Debug)]
+pub struct FirstPageSchema {
+    pub page_header: PageHeader,
+}
+
 impl Page {
     /// page_number: SQLite 1-indexed page number starting with 1
     fn parse(page_number: u32, page_size: usize, db: &[u8]) -> Result<Self> {
