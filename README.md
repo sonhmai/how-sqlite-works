@@ -16,37 +16,6 @@ RUSTFLAGS=-Awarnings cargo run -- sql sample.db "select name from apples"
 sqlite3 sample.db "select * from apples"
 ```
 
-## TODO
-
-### Read Path
-
-Projection
-- [x] select * from table1
-- [ ] Implement Project by Column Name in ExecProjection: select col1 from table1
-- [ ] select col1, col2 from table1
-
-Selection
-- [ ] Where `select col1 from table1 where col2='value'`
-- [ ] Where `IN`
-
-Aggregation
-- [ ] Count: `select name, count(1) from apples group by name;`
-- [ ] Max: `select name, max(color) from apples group by name;`
-- [ ] Average
-
-Component
-- [x] basic SQL to Logical Plan
-- [x] basic Logical Plan execution
-- [x] physical plan
-- [ ] ColumnValue and DataRecord
-- [ ] Parsing database
-- [ ] Parsing table
-- [ ] replace hardcoded ExecApplesScan by actual sqlite table scan
-
-
-### Write Path
-to be implemented later
-
 
 ## Architecture
 
