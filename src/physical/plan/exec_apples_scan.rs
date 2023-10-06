@@ -5,6 +5,7 @@ use crate::physical::plan::exec::Exec;
 ///
 /// A hard-coded scan physical operator for testing
 /// TODO remove this after implementing proper sqlite Table scan
+#[derive(Debug)]
 pub struct ExecApplesScan {}
 
 impl Exec for ExecApplesScan {
