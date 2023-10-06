@@ -12,6 +12,7 @@ use crate::physical::plan::exec::Exec;
 ///     a + b
 ///
 /// SELECT without FROM will only evaluate expressions.
+#[derive(Debug)]
 pub struct ExecProjection {
     // Physical plan input into this Exec for example
     // SourceScan, CsvScan, SqliteTableScan, etc.
