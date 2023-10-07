@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 use crate::model::db_header::DbHeader;
+use crate::model::page::FirstPage;
 
 /// DbMeta holds meta information of the database
 /// - db header
@@ -15,7 +16,9 @@ pub struct DbMeta {
 impl DbMeta {
     pub fn parse(db: &[u8]) -> Result<Self> {
         let db_header = DbHeader::parse(&db[..DbHeader::SIZE])?;
-
+        let first_page = FirstPage::parse(db)?;
+        let page_content_offset = first_page.page_header.content_start_offset;
+        println!("{page_content_offset}");
 
         Ok(DbMeta {
             db_header,
