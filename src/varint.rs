@@ -9,7 +9,8 @@
 /// Args
 ///     bytes: &[u8] shared ref to a byte array because we don't need to modify it.
 /// Returns
-///     (i64, usize) these basic types are Copy -> values are copies to diff memory location
+///     (varint: i64, bytes_read: usize)
+///     these basic types are Copy -> values are copies to diff memory location
 pub fn decode_varint(bytes: &[u8]) -> (i64, usize) {
     let mut varint = 0;
     let mut bytes_read = 0;
