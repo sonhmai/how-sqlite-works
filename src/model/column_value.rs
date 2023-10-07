@@ -65,6 +65,9 @@ impl ColumnValue {
     pub fn int32(int: i32) -> ColumnValue {
         ColumnValue::Int32(int.to_be_bytes())
     }
+    pub fn int8(int: i8) -> ColumnValue {
+        ColumnValue::Int8(int.to_be_bytes())
+    }
 
     /// Parses column value from bytes.
     /// https://www.sqlite.org/fileformat.html#record_format
