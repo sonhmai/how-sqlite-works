@@ -1,6 +1,6 @@
 # TODO
 
-## Read Path
+## Query Planning and Processing (Read Path)
 
 Scan
 - [x] Implement DbHeader
@@ -36,5 +36,32 @@ Component
 - [ ] replace hardcoded ExecApplesScan by actual sqlite table scan
 
 
+## Query Optimizer
+TODO, not prioritized yet.
+
+
+## Buffer Pool
+- Buffer Pool is a in-memory cache of pages from the database file on disk.
+- All access methods (read and write) MUST go through the buffer pool 
+and not the database file directly.
+
+
+- [ ] `SqliteContextProvider` and `DbMeta`
+  when SQLite starts, use buffer pool for parsing db header and metadata from first page.
+- [ ] maintain dirty-flag for each page, set if page is modified.
+- [ ] `Buffer Replacement Policy` implement LRU policy for page eviction when buffer is full.
+  - maintain timestamp of when page was last accessed.
+  - when buffer is full, evict page with oldest timestamp.
+  - store timestamp in a data structure that allows efficient sorting and retrieving smallest.
+
+
 ## Write Path
-not analyzed yet
+TODO
+
+
+## Concurrency Control
+TODO
+
+
+## Recovery 
+TODO

@@ -7,6 +7,7 @@ This was inspired by
 - [Apache Arrow DataFusion](https://github.com/apache/arrow-datafusion).
 
 
+Getting Started
 ```
 # run tests
 cargo test
@@ -24,10 +25,38 @@ sqlite3 sample.db "select * from apples"
 
 
 ## Architecture
+Differences to SQLite official implementation:
+- Database Frontend (Tokenizer, Parser) is replaced by DataFusion.
+- Virtual Machine is replaced by using DataFusion and a custom Physical Layer for query processing and execution.
 
-SQL string -> Logical Plan: datafusion-sql
+
+Layers
+```
+SQL String
+-----Logical Layer-----
+Query Planning: Tokenizer, Parser (datafusion)
+Logical Plan (datafusion)
+-----Physical Layer-----
+Physical Planner (custom)
+Physical Plan (custom)
+-----Access Layer-----
+Buffer Pool (custom)
+Concurrency Control (custom)
+Recovery (custom)
+-----Storage Layer-----
+File Storage (custom following SQLite database file format)
+```
+
 
 ## References
+
+### Readings
+1. Paper - Architecture of a Database System (2007). Overview of important components to relational database systems.
+2. Book - SQLite Database System Design and Implementation, Sibsankar Haldar (2016).
+
+
+### Projects
 - https://github.com/datafuselabs
 - [Apache OpenDAL](https://github.com/apache/incubator-opendal)
 - [GrepTimeDB](https://github.com/GreptimeTeam/greptimedb)
+- [rqlite, A lightweight, distributed relational database built on SQLite in Golang](https://github.com/rqlite/rqlite)
