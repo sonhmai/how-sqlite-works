@@ -25,7 +25,7 @@ impl Page {
     const SCHEMA_PAGE_NUM: u32 = 1;
 
     /// page_number: SQLite 1-indexed page number starting with 1
-    fn parse(page_number: u32, page_size: usize, db: &[u8]) -> Result<Self> {
+    pub fn parse(page_number: u32, page_size: usize, db: &[u8]) -> Result<Self> {
         assert!(page_number >= 2);
         // page number in sqlite is 1-indexed (starts from 1, not 0)
         let page_offset = usize::try_from(page_number - 1)? * page_size;

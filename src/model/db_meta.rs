@@ -9,7 +9,7 @@ use crate::model::page::Page;
 ///
 #[derive(Debug)]
 pub struct DbMeta {
-    db_header: DbHeader,
+    pub db_header: DbHeader,
     // schema_objects: Vec<SchemaObject>, // table, index, view,...
 }
 

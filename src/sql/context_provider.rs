@@ -8,6 +8,8 @@ use datafusion_expr::builder::LogicalTableSource;
 use datafusion_expr::{AggregateUDF, ScalarUDF, TableSource, WindowUDF};
 use datafusion_sql::planner::ContextProvider;
 use datafusion_sql::TableReference;
+use crate::model::database::Database;
+use crate::access::buffer_pool::BufferPool;
 
 /// SqliteContextProvider is an extension of datafusion ContextProvider
 /// for providing Catalog, Table, Schema, UDFs, etc. of sqlite and custom ones.
@@ -44,6 +46,12 @@ impl SqliteContextProvider {
             tables,
             options: Default::default(),
         }
+    }
+
+    // Create ContextProvider from reading first page of db file for
+    // db metadata (db info and schema objects
+    pub fn new_for_db(database: &Database) {
+
     }
 }
 
