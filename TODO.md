@@ -4,8 +4,9 @@
 
 Scan
 - [x] Implement DbHeader
-- [ ] How to parse tables and schemas from db file first page.
 - [ ] SqliteContextProvider: parse db header from file for tables and schemas
+  - [x] Create DiskManager for centralizing physical ops instead of using BufferPool.
+  - [x] Centralize init process in Database.
   - [ ] Implement DbMeta to be able to parse DbHeader and schema objects
   - [ ] From schema objects we can get table (name, cols, data types) for SqliteContextProvider
   - [ ] Implement this conversion in SqliteContextProvider::new, 
