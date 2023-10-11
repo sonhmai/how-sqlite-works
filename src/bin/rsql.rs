@@ -1,11 +1,10 @@
 use clap::{App, Arg, SubCommand};
 use datafusion_sql::planner::SqlToRel;
+use datafusion_sql::sqlparser::parser::Parser;
 use datafusion_sql::sqlparser::ast::Statement;
 use datafusion_sql::sqlparser::dialect::AnsiDialect;
-use datafusion_sql::sqlparser::{dialect::SQLiteDialect, parser::Parser};
 
 use rsql::model::database::Database;
-use rsql::model::table::Table;
 use rsql::physical::physical_planner::PhysicalPlanner;
 use rsql::sql::context_provider::SqliteContextProvider;
 

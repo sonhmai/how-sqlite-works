@@ -44,8 +44,14 @@ Buffer Pool (custom)
 Concurrency Control (custom)
 Recovery (custom)
 -----Storage Layer-----
+Disk Manager
 File Storage (custom following SQLite database file format)
 ```
+
+
+- Disk Manager
+  - logical abstraction over physical file system and disk access
+  - provides interfaces of physical disk operations: reads, writes, flushes, etc.
 
 
 ## References
