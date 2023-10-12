@@ -51,7 +51,7 @@ impl Page {
     }
 
     // Return cell pointers of this page
-    fn cell_ptrs(&self) -> Vec<usize> {
+    pub fn cell_ptrs(&self) -> Vec<usize> {
         // must offset extra Db header size if it's the first page
         // first page: DbHeader | PageHeader | CellPointers | ...
         // other page: PageHeader | CellPointers | ...
