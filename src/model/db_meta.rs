@@ -1,4 +1,5 @@
 use anyhow::Result;
+use crate::model::cell::LeafTableCell;
 
 use crate::model::db_header::DbHeader;
 use crate::model::page::Page;
@@ -19,7 +20,16 @@ impl DbMeta {
         let page_size: usize = db_header.page_size.try_into()?;
         let first_page = Page::parse_db_schema_page(db, page_size)?;
         let page_content_offset = first_page.page_header.content_start_offset;
-        println!("{first_page:?}");
+
+        let leaf_table_cells: Vec<LeafTableCell> = first_page
+            .cell_ptrs()
+            .iter()
+            // use &cell_ptr to borrow usize value
+            .map(|&cell_ptr| LeafTableCell::parse(&db[cell_ptr..]).unwrap())
+            .collect();
+
+        println!("{leaf_table_cells:?}");
+
 
         Ok(DbMeta {
             db_header,
