@@ -1,3 +1,6 @@
+use anyhow::Result;
+
+use crate::model::cell::LeafTableCell;
 
 /// Schema Table https://www.sqlite.org/schematab.html
 /// https://www.sqlite.org/fileformat.html#storage_of_the_sql_database_schema
@@ -32,5 +35,11 @@ pub struct SchemaObject {
     pub tbl_name: String,
     pub rootpage: u32,
     pub sql: String,
+}
+
+impl SchemaObject {
+    pub fn parse(cell: &LeafTableCell) -> Result<Self> {
+        todo!()
+    }
 }
 
