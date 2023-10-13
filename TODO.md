@@ -10,7 +10,8 @@ Scan
   - [ ] Implement DbMeta to be able to parse DbHeader and schema objects
     - [x] Page cell_ptrs()
     - [x] DbMeta parses leaf_table_cells for first page
-    - [ ] Implement SchemaObject::parse(&LeafTableCell)
+    - [x] Implement SchemaObject::parse(&LeafTableCell)
+    - [ ] Add parsing Columns from sql statement to SchemaObject::parse
   - [ ] From schema objects we can get table (name, cols, data types) for SqliteContextProvider
   - [ ] Implement this conversion in SqliteContextProvider::new, 
   potentially we need to convert sqlite type to arrow_schema types.

@@ -12,24 +12,7 @@
 ///
 /// Any column in an SQLite version 3 database, except an INTEGER PRIMARY KEY column,
 /// may be used to store a value of any storage class.
-use anyhow::Result;
-use std::str::from_utf8;
-//
-// #[derive(Debug)]
-// enum ColumnType {
-//     Null,
-//     // integer
-//     I8,
-//     I16,
-//     I24,
-//     I32,
-//     I48,
-//     I64,
-//     // real
-//     F64,
-//     Text(usize),
-//     Blob(usize),
-// }
+use anyhow::{bail, Result};
 
 // https://github.com/richardmarbach/codecrafters-sqlite-rust/blob/master/src/record.rs#L110
 // https://github.com/bert2/build-your-own-sqlite-rust/blob/master/src/format/col_content.rs
@@ -40,7 +23,6 @@ pub enum ColumnValue {
     Int8([u8; 1]),
     Int16([u8; 2]),
     Int24([u8; 3]),
-    // Int32([u8; 4]),
     Int32([u8; 4]),
     Int48([u8; 6]),
     Int64([u8; 8]),
@@ -69,7 +51,7 @@ impl ColumnValue {
         ColumnValue::Int8(int.to_be_bytes())
     }
 
-    /// Parses column value from bytes.
+    /// Parses column value from bytes. Returns Result<col_value, value_size>
     /// https://www.sqlite.org/fileformat.html#record_format
     pub fn parse(serial_type: i64, stream: &[u8]) -> Result<(ColumnValue, usize)> {
         Ok(match serial_type {
@@ -104,6 +86,37 @@ impl ColumnValue {
     }
 }
 
+impl TryFrom<&ColumnValue> for String {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &ColumnValue) -> Result<Self, Self::Error> {
+        Ok(match value {
+            // TODO optimize, currently str value in heap is cloned, it's expensive
+            ColumnValue::Text(string) => string.clone(),
+            _ => bail!("ColContent cannot be converted to String: {:?}", value),
+        })
+    }
+}
+
+
+impl TryFrom<&ColumnValue> for i32 {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &ColumnValue) -> Result<Self, Self::Error> {
+        Ok(match value {
+            // *bytes to dereference to first element without moving its content
+            // ownership to from_be_bytes()
+            ColumnValue::Int32(bytes) => Self::from_be_bytes(*bytes),
+            ColumnValue::Int8(bytes) => Self::from(i8::from_be_bytes(*bytes)),
+            _ => bail!("ColContent cannot be converted to I32: {:?}", value),
+        })
+    }
+}
+
+fn i32_from_3_be_bytes(bytes: [u8; 3]) -> i32 {
+    (i32::from(bytes[0]) << 16) | (i32::from(bytes[1]) << 8) | i32::from(bytes[2])
+}
+
 #[test]
 fn test_parse_col_value_null() {
     let (value, size) = ColumnValue::parse(0, b"").unwrap();
@@ -135,10 +148,23 @@ fn test_parse_col_value_blob() {
 }
 
 #[test]
-fn test_parse_col_value_text() {
+fn test_col_value_text() {
     // hello len 5 * 2 + 13 = 23 -> serial type 23
     // should parse only hello, ignore hi
     let (value, size) = ColumnValue::parse(23, b"hellohi").unwrap();
     assert_eq!(size, 5);
     assert_eq!(value, ColumnValue::Text("hello".to_owned()));
+
+    // test ColumnValue->String try_from
+    let s = String::try_from(&value).unwrap();
+    assert_eq!(s, "hello".to_owned());
+}
+
+#[test]
+fn test_i32_try_from_col_value() {
+    let col_value = ColumnValue::int32(2_000_000_000);
+    assert_eq!(i32::try_from(&col_value).unwrap(), 2_000_000_000);
+
+    let col_value = ColumnValue::int8(120);
+    assert_eq!(i32::try_from(&col_value).unwrap(), 120);
 }
