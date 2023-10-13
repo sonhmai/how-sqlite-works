@@ -69,4 +69,7 @@ TODO
 
 
 ## Recovery 
-TODO
+- [ ] implement LogRecord
+- [ ] LogManager
+- [ ] CheckpointManager
+- [ ] LogRecovery: reads log file from disk, redo and undo.
