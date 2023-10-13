@@ -59,6 +59,8 @@ impl SchemaObject {
 
 #[cfg(test)]
 mod tests {
+    use datafusion_sql::sqlparser::dialect::SQLiteDialect;
+    use datafusion_sql::sqlparser::parser::Parser;
     use crate::model::column_value::ColumnValue;
 
     use super::*;
@@ -83,5 +85,20 @@ mod tests {
         assert_eq!(schema_obj.tbl_name, "oranges".to_owned());
         assert_eq!(schema_obj.rootpage, 4);
         assert_eq!(schema_obj.sql, "CREATE TABLE oranges\n(\n\tid integer primary key autoincrement,\n\tname text,\n\tdescription text\n)".to_owned());
+    }
+
+    #[test]
+    fn test_parse_cols() {
+        let sql = "\
+            CREATE TABLE oranges(\
+                id integer primary key autoincrement,\
+                name text,\
+                description text\
+        )";
+        let dialect = SQLiteDialect {};
+        let ast = Parser::parse_sql(&dialect, sql).unwrap();
+        let statement = &ast[0];
+
+        println!("{statement}")
     }
 }
