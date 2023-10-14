@@ -1,6 +1,8 @@
 use anyhow::Result;
+use arrow_schema::Field;
 
 use crate::model::cell::LeafTableCell;
+use crate::sql::parsing::parse_columns_from_ddl;
 
 /// Schema Table https://www.sqlite.org/schematab.html
 /// https://www.sqlite.org/fileformat.html#storage_of_the_sql_database_schema
@@ -37,6 +39,7 @@ pub struct SchemaObject {
     // https://www.sqlite.org/fileformat.html#pages
     pub rootpage: u32,
     pub sql: String,
+    pub columns: Vec<Field>,
 }
 
 impl SchemaObject {
@@ -46,6 +49,7 @@ impl SchemaObject {
         let tbl_name = String::try_from(cell.payload.value_at_index(2))?;
         let rootpage = i32::try_from(cell.payload.value_at_index(3))?;
         let sql = String::try_from(cell.payload.value_at_index(4))?;
+        let columns = parse_columns_from_ddl(&sql)?;
 
         Ok(Self {
             obj_type,
@@ -53,14 +57,15 @@ impl SchemaObject {
             tbl_name,
             rootpage: rootpage as u32,
             sql,
+            columns,
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use datafusion_sql::sqlparser::dialect::SQLiteDialect;
-    use datafusion_sql::sqlparser::parser::Parser;
+    use arrow_schema::DataType;
+
     use crate::model::column_value::ColumnValue;
 
     use super::*;
@@ -85,20 +90,16 @@ mod tests {
         assert_eq!(schema_obj.tbl_name, "oranges".to_owned());
         assert_eq!(schema_obj.rootpage, 4);
         assert_eq!(schema_obj.sql, "CREATE TABLE oranges\n(\n\tid integer primary key autoincrement,\n\tname text,\n\tdescription text\n)".to_owned());
-    }
 
-    #[test]
-    fn test_parse_cols() {
-        let sql = "\
-            CREATE TABLE oranges(\
-                id integer primary key autoincrement,\
-                name text,\
-                description text\
-        )";
-        let dialect = SQLiteDialect {};
-        let ast = Parser::parse_sql(&dialect, sql).unwrap();
-        let statement = &ast[0];
+        assert_eq!(schema_obj.columns.len(), 3);
 
-        println!("{statement}")
+        assert_eq!(schema_obj.columns[0].name(), "id");
+        assert_eq!(schema_obj.columns[0].data_type(), &DataType::Int32);
+
+        assert_eq!(schema_obj.columns[1].name(), "name");
+        assert_eq!(schema_obj.columns[1].data_type(), &DataType::Utf8);
+
+        assert_eq!(schema_obj.columns[2].name(), "description");
+        assert_eq!(schema_obj.columns[2].data_type(), &DataType::Utf8);
     }
 }

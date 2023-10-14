@@ -27,14 +27,14 @@ fn main() {
             let db_file_path = _matches.value_of("db_file_path").unwrap();
             let sqlstr = _matches.value_of("sql").unwrap();
             let db = Database::new(db_file_path).unwrap();
-            println!("Executing '{sqlstr}' against db {db:?}");
+            println!("Executing '{sqlstr}' against db {db_file_path}");
 
             // sql to unoptimized logical plan
             let dialect = AnsiDialect {};
             let ast: Vec<Statement> = Parser::parse_sql(&dialect, sqlstr).unwrap();
             let statement = &ast[0];
             // create logical query plan
-            let schema_provider = SqliteContextProvider::new();
+            let schema_provider = SqliteContextProvider::new_for_db(&db);
             let sql_to_rel = SqlToRel::new(&schema_provider);
             let logical_plan = sql_to_rel.sql_statement_to_plan(statement.clone()).unwrap();
             let physical_planner = PhysicalPlanner {};

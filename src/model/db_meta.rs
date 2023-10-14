@@ -3,6 +3,7 @@ use crate::model::cell::LeafTableCell;
 
 use crate::model::db_header::DbHeader;
 use crate::model::page::Page;
+use crate::model::schema::SchemaObject;
 
 /// DbMeta holds meta information of the database
 /// - db header
@@ -11,7 +12,7 @@ use crate::model::page::Page;
 #[derive(Debug)]
 pub struct DbMeta {
     pub db_header: DbHeader,
-    // schema_objects: Vec<SchemaObject>, // table, index, view,...
+    pub schema_objects: Vec<SchemaObject>, // table, index, view,...
 }
 
 impl DbMeta {
@@ -28,11 +29,19 @@ impl DbMeta {
             .map(|&cell_ptr| LeafTableCell::parse(&db[cell_ptr..]).unwrap())
             .collect();
 
-        println!("{leaf_table_cells:?}");
+        let schema_objects: Vec<SchemaObject> = leaf_table_cells
+            .iter()
+            .map(|cell| SchemaObject::parse(&cell))
+            // filter out SchemaObject "sqlite_sequence" because cannot parse
+            // DDL without datatype yet: CREATE TABLE sqlite_sequence(name,seq)
+            .filter(|result| result.is_ok())
+            .map(|result| result.unwrap())
+            .collect();
 
 
         Ok(DbMeta {
             db_header,
+            schema_objects,
         })
     }
 }
