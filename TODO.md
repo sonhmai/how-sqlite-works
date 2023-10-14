@@ -4,7 +4,7 @@
 
 Scan
 - [x] Implement DbHeader
-- [ ] SqliteContextProvider: parse db header from file for tables and schemas
+- [x] SqliteContextProvider: parse db header from file for tables and schemas
   - [x] Create DiskManager for centralizing physical ops instead of using BufferPool.
   - [x] Centralize init process in Database.
   - [x] Implement DbMeta to be able to parse DbHeader and schema objects
@@ -13,9 +13,13 @@ Scan
     - [x] Implement SchemaObject::parse(&LeafTableCell)
     - [x] Add parsing Columns from sql statement to SchemaObject::parse
     - [x] Implement field DbMeta.schema_objects
-  - [ ] Implement this conversion in SqliteContextProvider::new. From schema objects we can get table (name, cols, data types) for SqliteContextProvider
+  - [x] Implement this conversion in SqliteContextProvider::new. From schema objects we can get table (name, cols, data types) for SqliteContextProvider
   potentially we need to convert sqlite type to arrow_schema types.
 - [ ] ExecScan: implement Physical TableScan
+  - [ ] Implement one page scan
+  - [ ] PhysicalPlanner.plan(): Replace hardcoded ExecApplesScan with actual Scan.
+- [ ] Scan Many B+tree pages
+  - [ ] implement dfs or bfs for scanning across multiple pages.
 
 Projection
 - [x] select * from table1

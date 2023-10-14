@@ -8,8 +8,8 @@ use datafusion_expr::builder::LogicalTableSource;
 use datafusion_expr::{AggregateUDF, ScalarUDF, TableSource, WindowUDF};
 use datafusion_sql::planner::ContextProvider;
 use datafusion_sql::TableReference;
+
 use crate::model::database::Database;
-use crate::access::buffer_pool::BufferPool;
 
 /// SqliteContextProvider is an extension of datafusion ContextProvider
 /// for providing Catalog, Table, Schema, UDFs, etc. of sqlite and custom ones.
@@ -22,36 +22,37 @@ pub struct SqliteContextProvider {
     options: ConfigOptions,
 }
 
+fn create_table(fields: Vec<Field>) -> Arc<dyn TableSource> {
+    Arc::new(LogicalTableSource::new(Arc::new(
+        Schema::new_with_metadata(fields, HashMap::new()),
+    )))
+}
+
 fn create_table_source(fields: Vec<Field>) -> Arc<dyn TableSource> {
     Arc::new(LogicalTableSource::new(Arc::new(
         Schema::new_with_metadata(fields, HashMap::new()),
     )))
 }
 
+
+
 impl SqliteContextProvider {
-    pub fn new() -> SqliteContextProvider {
-        // TODO parse tables and their schemas from sqlite db file
+
+    // Create ContextProvider from reading first page of db file for
+    // db metadata (db info and schema objects
+    pub fn new_for_db(database: &Database) -> SqliteContextProvider {
 
         let mut tables = HashMap::new();
-        // inserting the tables existed in sample.db
-        tables.insert(
-            "apples".to_string(),
-            create_table_source(vec![
-                Field::new("id", DataType::Int32, false),
-                Field::new("name", DataType::Utf8, false),
-                Field::new("color", DataType::Utf8, false),
-            ]),
-        );
+
+        for schema_obj in &database.db_meta.schema_objects {
+            let table_source = create_table_source(schema_obj.columns.clone());
+            tables.insert(schema_obj.tbl_name.clone(), table_source);
+        }
+
         SqliteContextProvider {
             tables,
             options: Default::default(),
         }
-    }
-
-    // Create ContextProvider from reading first page of db file for
-    // db metadata (db info and schema objects
-    pub fn new_for_db(database: &Database) {
-
     }
 }
 

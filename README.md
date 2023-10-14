@@ -8,6 +8,7 @@ This was inspired by
 
 
 Getting Started
+
 ```
 # run tests
 cargo test
@@ -22,6 +23,10 @@ RUSTFLAGS=-Awarnings cargo run -- sql sample.db "select name from apples"
 # see what returns by sqlite
 sqlite3 sample.db "select * from apples"
 ```
+
+Sample.db schema
+- apples: id integer primary key, name text, color text
+- oranges: id integer primary key, name text, description text
 
 
 ## Architecture
