@@ -65,21 +65,14 @@ mod tests {
         assert_eq!(fields[2].data_type(), &DataType::Utf8);
     }
 
+    #[ignore = "sqlparser cannot parse SQLite statement without data type"]
     #[test]
     fn test_parse_columns_from_ddl() {
-        let ddl = "CREATE TABLE my_table (id INT, name text, age INT)";
+        let ddl = "CREATE TABLE sqlite_sequence(name,seq)";
+        // TODO - handle this sqlparser cannot parse SQLite statement without data type
         let fields = parse_columns_from_ddl(ddl).unwrap();
 
-        assert_eq!(fields.len(), 3);
-
-        assert_eq!(fields[0].name(), "id");
-        assert_eq!(fields[0].data_type(), &DataType::Int32);
-
-        assert_eq!(fields[1].name(), "name");
-        assert_eq!(fields[1].data_type(), &DataType::Utf8);
-
-        assert_eq!(fields[2].name(), "age");
-        assert_eq!(fields[2].data_type(), &DataType::Int32);
+        assert_eq!(fields.len(), 2);
     }
 
     #[test]

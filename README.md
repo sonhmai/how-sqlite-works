@@ -54,11 +54,24 @@ File Storage (custom following SQLite database file format)
   - provides interfaces of physical disk operations: reads, writes, flushes, etc.
 
 
+### Known Limitations
+
+Schema
+- sqlparser-rs and datafusion seems not having knowledge re primary key and auto-increment.
+Parsing DDL which has `id integer primary key autoincrement` lost knowledge of `primary key autoincrement`.
+
+
+Data types
+- Arrow supports Utf8 only. Sqlite has Text in (UTF-8, UTF-16BE or UTF-16LE) so
+only utf8 is supported.
+
+
 ## References
 
 ### Readings
 1. Paper - Architecture of a Database System (2007). Overview of important components to relational database systems.
 2. Book - SQLite Database System Design and Implementation, Sibsankar Haldar (2016).
+3. Article - [Series: What would SQLite look like if written in Rust?](https://dev.to/thepolyglotprogrammer/what-would-sqlite-look-like-if-written-in-rust-part-2-4g66)
 
 
 ### Projects

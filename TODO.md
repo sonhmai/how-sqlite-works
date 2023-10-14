@@ -7,13 +7,13 @@ Scan
 - [ ] SqliteContextProvider: parse db header from file for tables and schemas
   - [x] Create DiskManager for centralizing physical ops instead of using BufferPool.
   - [x] Centralize init process in Database.
-  - [ ] Implement DbMeta to be able to parse DbHeader and schema objects
+  - [x] Implement DbMeta to be able to parse DbHeader and schema objects
     - [x] Page cell_ptrs()
     - [x] DbMeta parses leaf_table_cells for first page
     - [x] Implement SchemaObject::parse(&LeafTableCell)
     - [x] Add parsing Columns from sql statement to SchemaObject::parse
-  - [ ] From schema objects we can get table (name, cols, data types) for SqliteContextProvider
-  - [ ] Implement this conversion in SqliteContextProvider::new, 
+    - [x] Implement field DbMeta.schema_objects
+  - [ ] Implement this conversion in SqliteContextProvider::new. From schema objects we can get table (name, cols, data types) for SqliteContextProvider
   potentially we need to convert sqlite type to arrow_schema types.
 - [ ] ExecScan: implement Physical TableScan
 
