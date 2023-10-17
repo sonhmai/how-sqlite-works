@@ -1,4 +1,14 @@
-# TODO
+# Roadmap and TODO
+
+## Roadmap
+1. Implement an MVP version for running TPH benchmark read queries.
+2. Benchmark
+3. Improve
+4. Implement an MVP version for running TPH benchmark transaction queries.
+5. Benchmark
+6. Improve
+7. Rinse and Repeat
+
 
 ## CLI
 - [ ] implement .dbinfo command. Pass `tests/test_dot_commands.rs cli_dbinfo` test.
