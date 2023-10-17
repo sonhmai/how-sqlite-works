@@ -1,5 +1,9 @@
 # TODO
 
+## CLI
+- [ ] implement .dbinfo command. Pass `tests/test_dot_commands.rs cli_dbinfo` test.
+
+
 ## Query Planning and Processing (Read Path)
 
 Scan
@@ -47,6 +51,51 @@ Component
 
 ## Query Optimizer
 TODO, not prioritized yet.
+
+
+## BTree Module
+
+```
+Layering
+
+ExecScan (PhysicalPlan)
+---
+BTree Module
+---
+BufferPool
+
+```
+
+where is it?
+- above BufferPool, calls by PhysicalPlan (i.e. ExecScan) to scan
+all table pages when reading from table (i.e. `select * from apples`)
+- should not access DiskManager of File directly, 
+- should call BufferPool to get page on disk.
+
+example sequence
+- tbl_name="apples" is parsed from sql str like select name from apples
+- exec_scan calls BTree module to scan specific table name "apples" from query
+- maybe BTree returns TableLeafCell, and they are parsed to DataRecord in ExecScan?
+
+
+TODO
+  - [ ] Stage 1: can work with normal table
+    - [ ] scan table when table is on 1 page (table `apples` or `oranges` in `sample.db`).
+      - [ ] pass test `cli_sql_scan_table_single_page`
+    - [ ] scan table that spans multiple pages: interior and table leaf pages.
+      - [ ] add TableInteriorCell (similar to TableLeafCell)
+      - [ ] traverse tree with DFS or BFS to return all leaf cells by going thru pointer in interior cell.
+      - [ ] pass test `cli_sql_scan_table_multiple_pages`
+  - [ ] Stage 2: can work with index table
+    - [ ] IndexLeafCell and IndexInteriorCell
+    - ???
+
+
+References
+  - [Sqlite dev.to series: Part 3 - Understanding the B-Tree and its role on database design](https://dev.to/thepolyglotprogrammer/what-would-sqlite-look-like-if-written-in-rust-part-3-ool)
+  - (optional) Chapter 6, book Subsankar in readings.
+  - https://jvns.ca/blog/2014/10/02/how-does-sqlite-work-part-2-btrees/
+  - https://saveriomiroddi.github.io/SQLIte-database-file-format-diagrams/
 
 
 ## Buffer Pool
