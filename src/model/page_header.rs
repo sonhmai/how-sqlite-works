@@ -2,8 +2,6 @@ use std::u8;
 
 use anyhow::{bail, Result};
 
-// https://github.com/richardmarbach/codecrafters-sqlite-rust/blob/master/src/page.rs#L161
-// https://github.com/bert2/build-your-own-sqlite-rust/blob/master/src/format/page_header.rs
 #[derive(Debug)]
 pub struct PageHeader {
     pub page_type: PageType,

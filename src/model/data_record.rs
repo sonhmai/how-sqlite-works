@@ -1,8 +1,6 @@
 use crate::model::column_value::ColumnValue;
 use crate::varint::decode_varint;
 
-// https://github.com/bert2/build-your-own-sqlite-rust/blob/master/src/format/record.rs
-// https://github.com/richardmarbach/codecrafters-sqlite-rust/blob/master/src/record.rs#L110
 /// DataRecord needs a lifetime parameter 'a to tell the compiler that Vec values
 /// has the same lifetime a as owning struct DataRecord
 #[derive(Debug)]
