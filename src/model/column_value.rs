@@ -14,8 +14,7 @@
 /// may be used to store a value of any storage class.
 use anyhow::{bail, Result};
 
-// https://github.com/richardmarbach/codecrafters-sqlite-rust/blob/master/src/record.rs#L110
-// https://github.com/bert2/build-your-own-sqlite-rust/blob/master/src/format/col_content.rs
+
 // TODO optimize - copy for string and bytes values are costly, ok for the rest (int, float,...)
 #[derive(Debug, PartialEq, Clone)]
 pub enum ColumnValue {
