@@ -41,7 +41,7 @@ impl Database {
         // TODO does Database need ref to DiskManager? why?
         //  If yes, how to have both database and buffer pool refs 1 obj DiskManager?
         // ownership of disk_manager is moved to BufferPool
-        let buffer_pool = BufferPool::new(disk_manager);
+        let buffer_pool = BufferPool::new(10, disk_manager);
 
         Ok(Database {
             db_meta,
