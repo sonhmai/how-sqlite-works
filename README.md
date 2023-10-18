@@ -22,6 +22,11 @@ RUSTFLAGS=-Awarnings cargo run -- sql sample.db "select name from apples"
 
 # see what returns by sqlite
 sqlite3 sample.db "select * from apples"
+
+# output >= debug logs
+export RUST_LOG=debug
+sqlite3 sample.db "select * from apples"
+RUST_LOG=debug sqlite3 sample.db "select * from apples"  # this also works
 ```
 
 Sample.db schema

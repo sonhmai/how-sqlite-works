@@ -4,11 +4,13 @@ use datafusion_sql::sqlparser::parser::Parser;
 use datafusion_sql::sqlparser::ast::Statement;
 use datafusion_sql::sqlparser::dialect::AnsiDialect;
 
+use log::info;
 use rsql::model::database::Database;
 use rsql::physical::physical_planner::PhysicalPlanner;
 use rsql::sql::context_provider::SqliteContextProvider;
 
 fn main() {
+    env_logger::init();
     let matches = App::new("rust-sqlite")
         .subcommand(
             SubCommand::with_name("sql")
@@ -27,7 +29,7 @@ fn main() {
             let db_file_path = _matches.value_of("db_file_path").unwrap();
             let sqlstr = _matches.value_of("sql").unwrap();
             let db = Database::new(db_file_path).unwrap();
-            println!("Executing '{sqlstr}' against db {db_file_path}");
+            info!("Executing '{sqlstr}' against db {db_file_path}");
 
             // sql to unoptimized logical plan
             let dialect = AnsiDialect {};
@@ -39,9 +41,9 @@ fn main() {
             let logical_plan = sql_to_rel.sql_statement_to_plan(statement.clone()).unwrap();
             let physical_planner = PhysicalPlanner {};
             let exec = physical_planner.plan(&logical_plan);
-            println!("Physical plan: {exec:?}");
+            info!("Physical plan: {exec:?}");
             let records = exec.execute();
-            println!("Returned records: {records:?}")
+            info!("Returned records: {records:?}")
         }
         _ => unreachable!(),
     }

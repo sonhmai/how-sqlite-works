@@ -5,6 +5,7 @@ use datafusion_sql::sqlparser;
 use datafusion_sql::sqlparser::ast::Statement::CreateTable;
 use datafusion_sql::sqlparser::dialect::SQLiteDialect;
 use datafusion_sql::sqlparser::parser::Parser;
+use log::{error, info};
 
 pub fn parse_columns_from_ddl(ddl: &str) -> Result<Vec<Field>> {
     let dialect = SQLiteDialect {};
@@ -90,11 +91,11 @@ fn main() {
     match parse_columns_from_ddl(ddl) {
         Ok(fields) => {
             let schema = Schema::new(fields);
-            println!("Parsed columns and data types:");
+            info!("Parsed columns and data types:");
             for field in schema.fields() {
-                println!("{}: {:?}", field.name(), field.data_type());
+                info!("{}: {:?}", field.name(), field.data_type());
             }
         }
-        Err(err) => eprintln!("Error parsing DDL: {}", err),
+        Err(err) => error!("Error parsing DDL: {}", err),
     }
 }
