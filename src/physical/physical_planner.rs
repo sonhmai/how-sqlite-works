@@ -1,5 +1,6 @@
 use anyhow::bail;
 use datafusion_expr::LogicalPlan;
+use log::{error, info};
 use crate::model::column_value::ColumnValue;
 
 use crate::physical::expression::col_by_index::PhysicalColByIndex;
@@ -24,11 +25,11 @@ impl PhysicalPlanner {
     ///     can be many types so we don't know the size at compile time.
     ///
     pub fn plan(&self, logical_plan: &LogicalPlan) -> Box<dyn Exec> {
-        println!("executing logical plan \n{logical_plan:?}");
+        info!("executing logical plan \n{logical_plan:?}");
 
         match logical_plan {
             LogicalPlan::TableScan(table_scan) => {
-                println!(
+                info!(
                     "Scanning table {} projection {:?}",
                     table_scan.table_name, table_scan.projection
                 );
@@ -49,7 +50,7 @@ impl PhysicalPlanner {
                 })
             }
             _ => {
-                println!("error executing plan {logical_plan:#?}");
+                error!("error executing plan {logical_plan:#?}");
                 // TODO make return type Result with error
                 Box::new(ExecDummy {})
             }

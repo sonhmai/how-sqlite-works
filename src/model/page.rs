@@ -1,4 +1,5 @@
 use anyhow::Result;
+use log::debug;
 
 use crate::model::db_header::DbHeader;
 use crate::model::page_header::{PageHeader, PageType};
@@ -59,7 +60,7 @@ impl Page {
             if self.is_db_schema_page() { DbHeader::SIZE } else { 0 };
         let num_cells: usize = self.page_header.number_of_cells.into();
 
-        println!("cell ptrs offset {cell_ptrs_offset}, num {num_cells}");
+        debug!("cell ptrs offset {cell_ptrs_offset}, num {num_cells}");
 
         self.data[cell_ptrs_offset..]
             .chunks_exact(2)

@@ -43,6 +43,7 @@ impl LeafTableCell {
 
 #[cfg(test)]
 mod tests {
+    use log::info;
     use crate::model::cell::LeafTableCell;
     use crate::model::column_value::ColumnValue;
 
@@ -78,7 +79,7 @@ mod tests {
         let cell_bytes: Vec<u8> = vec![120, 3, 7, 23, 27, 27, 1, 129, 71, 116, 97, 98, 108, 101, 111, 114, 97, 110, 103, 101, 115, 111, 114, 97, 110, 103, 101, 115, 4, 67, 82, 69, 65, 84, 69, 32, 84, 65, 66, 76, 69, 32, 111, 114, 97, 110, 103, 101, 115, 10, 40, 10, 9, 105, 100, 32, 105, 110, 116, 101, 103, 101, 114, 32, 112, 114, 105, 109, 97, 114, 121, 32, 107, 101, 121, 32, 97, 117, 116, 111, 105, 110, 99, 114, 101, 109, 101, 110, 116, 44, 10, 9, 110, 97, 109, 101, 32, 116, 101, 120, 116, 44, 10, 9, 100, 101, 115, 99, 114, 105, 112, 116, 105, 111, 110, 32, 116, 101, 120, 116, 10, 41];
         let cell = LeafTableCell::parse(cell_bytes.as_slice()).unwrap();
 
-        println!("{cell:?}");
+        info!("{cell:?}");
         assert_eq!(cell.rowid, 3);
         assert_eq!(cell.payload.values.len(), 5); // schema object row has 5 values
         // db obj type

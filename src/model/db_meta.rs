@@ -50,6 +50,7 @@ impl DbMeta {
 mod tests {
     use std::fs;
     use std::path::PathBuf;
+    use log::info;
     use crate::model::db_meta::DbMeta;
 
     #[test]
@@ -60,6 +61,6 @@ mod tests {
         let db_slice = data.as_slice();
 
         let db_meta = DbMeta::parse(db_slice).unwrap();
-        println!("{db_meta:?}")
+        info!("{db_meta:?}")
     }
 }

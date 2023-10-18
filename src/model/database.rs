@@ -22,8 +22,6 @@ pub struct Database {
 impl Database {
     /// create a Database instance from file path
     pub fn new(file_path: &str) -> Result<Self> {
-        println!("Creating Database from {file_path}");
-
         // To get page_size we need to parse the first 100 bytes before
         // constructing BufferPool and DiskManager as they need those info.
         // Hence, DbMeta has the exception of access physical file directly,
