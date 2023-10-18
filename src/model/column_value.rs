@@ -1,3 +1,4 @@
+use std::fmt;
 ///
 /// https://www.sqlite.org/datatype3.html
 /// Each value stored in an SQLite database (or manipulated by the database engine) has one of the following storage classes:
@@ -85,6 +86,29 @@ impl ColumnValue {
     }
 }
 
+impl fmt::Display for ColumnValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ColumnValue::Null => write!(f, "NULL"),
+            ColumnValue::Int8(arr) => write!(f, "{}", i8::from_be_bytes(*arr)),
+            ColumnValue::Int16(arr) => write!(f, "{}", i16::from_be_bytes(*arr)),
+            ColumnValue::Int24(arr) => {
+                write!(f, "{}", i32::from_be_bytes([0, arr[0], arr[1], arr[2]]))
+            }
+            ColumnValue::Int32(arr) => write!(f, "{}", i32::from_be_bytes(*arr)),
+            ColumnValue::Int48(arr) => {
+                write!(f, "{}", i64::from_be_bytes([0, 0, arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]]))
+            }
+            ColumnValue::Int64(arr) => write!(f, "{}", i64::from_be_bytes(*arr)),
+            ColumnValue::Float64(arr) => write!(f, "{}", f64::from_be_bytes(*arr)),
+            ColumnValue::Zero => write!(f, "0"),
+            ColumnValue::One => write!(f, "1"),
+            ColumnValue::Text(s) => write!(f, "{}", s),
+            ColumnValue::Blob(bytes) => write!(f, "Blob({})", bytes.len()),
+        }
+    }
+}
+
 impl TryFrom<&ColumnValue> for String {
     type Error = anyhow::Error;
 
@@ -98,6 +122,12 @@ impl TryFrom<&ColumnValue> for String {
 }
 
 
+/*
+For usage: i32::try_from(&col_value)
+
+let col_value = ColumnValue::int32(2_000_000_000);
+assert_eq!(i32::try_from(&col_value).unwrap(), 2_000_000_000);
+ */
 impl TryFrom<&ColumnValue> for i32 {
     type Error = anyhow::Error;
 
@@ -116,54 +146,143 @@ fn i32_from_3_be_bytes(bytes: [u8; 3]) -> i32 {
     (i32::from(bytes[0]) << 16) | (i32::from(bytes[1]) << 8) | i32::from(bytes[2])
 }
 
-#[test]
-fn test_parse_col_value_null() {
-    let (value, size) = ColumnValue::parse(0, b"").unwrap();
-    assert_eq!(size, 0);
-    assert_eq!(value, ColumnValue::Null);
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[test]
-fn test_parse_col_value_zero() {
-    let (value, size) = ColumnValue::parse(8, b"123").unwrap();
-    assert_eq!(size, 0);
-    assert_eq!(value, ColumnValue::Zero);
-}
+    #[test]
+    fn test_parse_col_value_null() {
+        let (value, size) = ColumnValue::parse(0, b"").unwrap();
+        assert_eq!(size, 0);
+        assert_eq!(value, ColumnValue::Null);
+    }
 
-#[test]
-fn test_parse_col_value_one() {
-    let (value, size) = ColumnValue::parse(9, b"33").unwrap();
-    assert_eq!(size, 0);
-    assert_eq!(value, ColumnValue::One);
-}
+    #[test]
+    fn test_parse_col_value_zero() {
+        let (value, size) = ColumnValue::parse(8, b"123").unwrap();
+        assert_eq!(size, 0);
+        assert_eq!(value, ColumnValue::Zero);
+    }
 
-#[test]
-fn test_parse_col_value_blob() {
-    // one byte br'0000_0001' = b'1' -> len 1 * 2 + 12 = 14
-    // should parse only first byte, ignore second byte
-    let (value, size) = ColumnValue::parse(14, b"12").unwrap();
-    assert_eq!(size, 1);
-    assert_eq!(value, ColumnValue::Blob(vec!(b'1')));
-}
+    #[test]
+    fn test_parse_col_value_one() {
+        let (value, size) = ColumnValue::parse(9, b"33").unwrap();
+        assert_eq!(size, 0);
+        assert_eq!(value, ColumnValue::One);
+    }
 
-#[test]
-fn test_col_value_text() {
-    // hello len 5 * 2 + 13 = 23 -> serial type 23
-    // should parse only hello, ignore hi
-    let (value, size) = ColumnValue::parse(23, b"hellohi").unwrap();
-    assert_eq!(size, 5);
-    assert_eq!(value, ColumnValue::Text("hello".to_owned()));
+    #[test]
+    fn test_parse_col_value_blob() {
+        // one byte br'0000_0001' = b'1' -> len 1 * 2 + 12 = 14
+        // should parse only first byte, ignore second byte
+        let (value, size) = ColumnValue::parse(14, b"12").unwrap();
+        assert_eq!(size, 1);
+        assert_eq!(value, ColumnValue::Blob(vec!(b'1')));
+    }
 
-    // test ColumnValue->String try_from
-    let s = String::try_from(&value).unwrap();
-    assert_eq!(s, "hello".to_owned());
-}
+    #[test]
+    fn test_col_value_text() {
+        // hello len 5 * 2 + 13 = 23 -> serial type 23
+        // should parse only hello, ignore hi
+        let (value, size) = ColumnValue::parse(23, b"hellohi").unwrap();
+        assert_eq!(size, 5);
+        assert_eq!(value, ColumnValue::Text("hello".to_owned()));
 
-#[test]
-fn test_i32_try_from_col_value() {
-    let col_value = ColumnValue::int32(2_000_000_000);
-    assert_eq!(i32::try_from(&col_value).unwrap(), 2_000_000_000);
+        // test ColumnValue->String try_from
+        let s = String::try_from(&value).unwrap();
+        assert_eq!(s, "hello".to_owned());
+    }
 
-    let col_value = ColumnValue::int8(120);
-    assert_eq!(i32::try_from(&col_value).unwrap(), 120);
+    #[test]
+    fn test_i32_try_from_col_value() {
+        let col_value = ColumnValue::int32(2_000_000_000);
+        assert_eq!(i32::try_from(&col_value).unwrap(), 2_000_000_000);
+
+        let col_value = ColumnValue::int8(120);
+        assert_eq!(i32::try_from(&col_value).unwrap(), 120);
+    }
+
+    #[test]
+    fn test_display_null() {
+        let value = ColumnValue::Null;
+        assert_eq!(value.to_string(), "NULL");
+    }
+
+    #[test]
+    fn test_display_int8() {
+        let value = ColumnValue::Int8([0x7F]);
+        assert_eq!(value.to_string(), "127");
+    }
+
+    #[test]
+    fn test_display_int16() {
+        let value = ColumnValue::Int16([0x80, 0x00]);
+        assert_eq!(value.to_string(), "-32768");
+    }
+
+    #[test]
+    fn test_display_int24() {
+        let value = ColumnValue::Int24([0x80, 0x00, 0x00]);
+        assert_eq!(value.to_string(), "8388608");
+    }
+
+    #[test]
+    fn test_display_int32() {
+        let value = ColumnValue::Int32([0x80, 0x00, 0x00, 0x01]);
+        assert_eq!(value.to_string(), "-2147483647");
+    }
+
+    #[test]
+    fn test_display_int48() {
+        let value = ColumnValue::Int48([0x80, 0x00, 0x00, 0x00, 0x00, 0x01]);
+        assert_eq!(value.to_string(), "140737488355329");
+    }
+
+    #[test]
+    fn test_display_int64() {
+        let value = ColumnValue::Int64([0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]);
+        assert_eq!(value.to_string(), "-9223372036854775807");
+    }
+
+    #[test]
+    fn test_display_float64() {
+        let value = ColumnValue::Float64([0x40, 0x09, 0x21, 0xFB, 0x54, 0x44, 0x2E, 0x8F]);
+        assert_eq!(value.to_string(), "3.1415926535899596");
+    }
+
+    #[test]
+    fn test_display_zero() {
+        let value = ColumnValue::Zero;
+        assert_eq!(value.to_string(), "0");
+    }
+
+    #[test]
+    fn test_display_one() {
+        let value = ColumnValue::One;
+        assert_eq!(value.to_string(), "1");
+    }
+
+    #[test]
+    fn test_display_blob() {
+        let value = ColumnValue::Blob(vec![0x41, 0x42, 0x43]);
+        assert_eq!(value.to_string(), "Blob(3)");
+    }
+
+    #[test]
+    fn test_display_text() {
+        let value = ColumnValue::Text(String::from("Hello, world!"));
+        assert_eq!(value.to_string(), "Hello, world!");
+
+        let value = ColumnValue::Text(String::from("\n\t"));
+        assert_eq!(value.to_string(), "\n\t");
+
+        let value = ColumnValue::Text(String::from("\0"));
+        assert_eq!(value.to_string(), "\0");
+
+        let value = ColumnValue::Text(String::from(""));
+        assert_eq!(value.to_string(), "");
+
+        let value = ColumnValue::Text(String::from("  "));
+        assert_eq!(value.to_string(), "  ");
+    }
 }

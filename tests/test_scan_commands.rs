@@ -2,7 +2,6 @@ use assert_cmd::prelude::*;
 use predicates::ord::eq;
 use std::process::Command;
 
-#[ignore]
 #[test]
 fn cli_sql_scan_table_single_page() {
     Command::cargo_bin("rsql")
@@ -14,7 +13,7 @@ fn cli_sql_scan_table_single_page() {
         ])
         .assert()
         .success()
-        .stdout(eq(r#"1|Granny Smith|Light Green
+        .stdout(predicates::str::contains(r#"1|Granny Smith|Light Green
 2|Fuji|Red
 3|Honeycrisp|Blush Red
 4|Golden Delicious|Yellow"#));

@@ -5,6 +5,7 @@ use datafusion_sql::sqlparser::ast::Statement;
 use datafusion_sql::sqlparser::dialect::AnsiDialect;
 
 use log::info;
+use rsql::model::data_record::DataRecord;
 use rsql::model::database::Database;
 use rsql::physical::physical_planner::PhysicalPlanner;
 use rsql::sql::context_provider::SqliteContextProvider;
@@ -43,8 +44,23 @@ fn main() {
             let exec = physical_planner.plan(&logical_plan);
             info!("Physical plan: {exec:?}");
             let records = exec.execute();
-            info!("Returned records: {records:?}")
+            info!("Returned records: {records:?}");
+            sqlite_show(&records);
         }
         _ => unreachable!(),
+    }
+}
+
+/// show CLI output in SQLite format
+fn sqlite_show(records: & Vec<DataRecord>) {
+    for record in records {
+        let formatted_values: Vec<String> = record
+            .values
+            .iter()
+            .map(|value| value.to_string())
+            .collect();
+
+        let output = formatted_values.join("|");
+        println!("{}", output);
     }
 }
