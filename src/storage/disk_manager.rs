@@ -1,4 +1,5 @@
-use std::fs;
+use std::fs::{self, OpenOptions};
+use std::io::{SeekFrom, Seek, Write};
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -30,8 +31,17 @@ impl DiskManager {
     }
 
     /// Write a file to the database file.
-    pub fn write_page(&self, page_id: PageId) -> Result<()> {
-        todo!()
+    pub fn write_page(&mut self, page_id: PageId, page: &Page) -> Result<()> {
+        let mut file = OpenOptions::new()
+        .write(true)
+        .open(&self.db_file_path)?;
+
+        let position = SeekFrom::Start((page_id.page_number * self.page_size as u32) as u64);
+        file.seek(position)?;
+        file.write_all(&page.data)?;
+        self.num_writes += 1;
+
+        Ok(())
     }
 
     fn db_bytes(&self) -> Vec<u8> {
