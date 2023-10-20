@@ -10,6 +10,25 @@ This was inspired by
 ## 1. Getting Started
 
 
+``` 
+docs # detailed doc for implementation and design records, step by step guidelines, module walkthrough, etc.
+readings # related more comprehensive readings like books and articles
+src # source code with unit tests, for a more detailed module description, look at Architecture section
+  bin # binary cli entry point with main function
+  access # access layer
+  concurrency # handling concurrency control: transactions for example
+  logical # things with logical layer like logical plan, not much here as we use arrow-datafusion for this
+  model # main domain model of sqlite database like TableLeafCell that mapped to sqlite3 doc concepts
+  physical # things related to physical planning and execution
+  recovery # handles recovery for failure and 
+  storage # module handling physical storage to file on disk
+  util 
+    presentation.rs # how sqlite present returned result to cli stdout (rows)
+    varint.rs # varint encode and decode
+tests # integration tests and test resources
+```
+
+
 ```
 # run tests
 cargo test
