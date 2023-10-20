@@ -8,3 +8,4 @@ pub mod access;
 pub mod recovery;
 pub mod concurrency;
 pub mod util;
+pub mod btree;
