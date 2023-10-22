@@ -44,7 +44,7 @@ impl LeafTableCell {
 #[cfg(test)]
 mod tests {
     use log::info;
-    use crate::model::cell::LeafTableCell;
+    use crate::model::cell_table_leaf::LeafTableCell;
     use crate::model::column_value::ColumnValue;
 
     #[test]
