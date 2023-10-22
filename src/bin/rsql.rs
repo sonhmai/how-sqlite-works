@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use clap::{App, Arg, SubCommand};
 use datafusion_sql::planner::SqlToRel;
 use datafusion_sql::sqlparser::parser::Parser;
@@ -40,8 +42,11 @@ fn main() {
             let schema_provider = SqliteContextProvider::new_for_db(&db);
             let sql_to_rel = SqlToRel::new(&schema_provider);
             let logical_plan = sql_to_rel.sql_statement_to_plan(statement.clone()).unwrap();
-            let physical_planner = PhysicalPlanner {};
-            let exec = physical_planner.plan(&logical_plan);
+            let db_ref = Rc::new(RefCell::new(db));
+            let physical_planner = PhysicalPlanner {
+                database: db_ref.clone()
+            };
+            let mut exec = physical_planner.plan(&logical_plan);
             info!("Physical plan: {exec:?}");
             let records = exec.execute();
             info!("Returned records: {records:?}");

@@ -69,6 +69,10 @@ impl Page {
             .collect()
     }
 
+    pub fn get_number_of_cells(&self) -> u16 {
+        self.page_header.number_of_cells
+    }
+
     // Return the id of this page.
     // The id is a unique identifier for a page that can be used to
     // - look up the page on disk

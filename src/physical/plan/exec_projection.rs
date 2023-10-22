@@ -36,7 +36,7 @@ impl ExecProjection {
 }
 
 impl Exec for ExecProjection {
-    fn execute(&self) -> Vec<DataRecord> {
+    fn execute(&mut self) -> Vec<DataRecord> {
         // why use into_iter() here instead of iter()?
         // https://www.becomebetterprogrammer.com/rust-iter-vs-iter_mut-vs-into_iter/
         // into_iter() yields any of T (moved value), &T or &mut T depending on the usage
