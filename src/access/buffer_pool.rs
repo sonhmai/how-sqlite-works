@@ -1,6 +1,6 @@
-
-use std::collections::HashMap;
+use std::cell::RefCell;
 use std::num::NonZeroUsize;
+use std::rc::Rc;
 
 use lru::LruCache;
 
@@ -18,7 +18,7 @@ use crate::storage::disk_manager::DiskManager;
 #[derive(Debug)]
 pub struct BufferPool {
     // current not supporting concurrency
-    page_table: LruCache<PageId, Page>,  // page_table keeping track of page in-mem caching
+    page_table: LruCache<PageId, Rc<RefCell<Page>>>,  // page_table keeping track of page in-mem caching
     disk_manager: DiskManager,
 }
 
@@ -38,18 +38,29 @@ impl BufferPool {
     /// If not in cache, it should be read from the DiskManager, saved in buffer,
     /// then return. If there are insufficient buffer space, a page in the buffer
     /// should be evicted based on the policy and new page added.
-    pub fn get_page(&mut self, page_id: PageId) -> &Page {
+    pub fn get_page(&mut self, page_id: PageId) -> Rc<RefCell<Page>> {
         if !self.page_table.contains(&page_id) {
             let page = self.disk_manager.read_page(page_id).expect("Failed to read page from disk");
-            self.page_table.put(page_id, page);
+            let mut_page_ref = Rc::new(RefCell::new(page));
+            self.page_table.put(page_id, mut_page_ref.clone());
         }
-        self.page_table.get(&page_id).expect("Failed to get page from buffer pool")
+        self.page_table
+            .get(&page_id)
+            .expect("Failed to get page from buffer pool")
+            .clone()
     }
 
     /// Flushes a page to disk.
     pub fn flush_page(&mut self, page_id: PageId) {
         if let Some(page) = self.page_table.pop(&page_id) {
-            self.disk_manager.write_page(page_id, &page).unwrap();
+            /*
+            page is of type Rc<RefCell<Page>>.
+            To get a reference to the Page inside, borrow() on the RefCell -> a Ref<Page>.
+            To get a Page from a Ref<Page>, use * to dereference it.
+            Finally, to get a reference to a Page from a Page, use &.
+            TODO - change disk_manager method, maybe it should take Rc<RefCell<Page>>?
+             */
+            self.disk_manager.write_page(page_id, &*page.borrow()).unwrap();
         }
     }
 
@@ -61,10 +72,11 @@ impl BufferPool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::path::PathBuf;
 
     use crate::storage::disk_manager::DiskManager;
+
+    use super::*;
 
     #[test]
     fn test_buffer_pool_evict_page_when_over_capacity() {

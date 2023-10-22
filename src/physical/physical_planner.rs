@@ -1,8 +1,11 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use anyhow::bail;
 use datafusion_expr::LogicalPlan;
 use log::{error, info};
-use crate::model::column_value::ColumnValue;
 
+use crate::model::column_value::ColumnValue;
+use crate::model::database::Database;
 use crate::physical::expression::col_by_index::PhysicalColByIndex;
 use crate::physical::expression::literal::PhysicalLiteral;
 use crate::physical::expression::physical_expr::PhysicalExpr;
@@ -12,7 +15,9 @@ use crate::physical::plan::exec_dummy::ExecDummy;
 use crate::physical::plan::exec_projection::ExecProjection;
 use crate::physical::plan::exec_scan::ExecScan;
 
-pub struct PhysicalPlanner {}
+pub struct PhysicalPlanner {
+    pub database: Rc<RefCell<Database>>
+}
 
 impl PhysicalPlanner {
     ///
@@ -33,7 +38,13 @@ impl PhysicalPlanner {
                     "Scanning table {} projection {:?}",
                     table_scan.table_name, table_scan.projection
                 );
-                Box::new(ExecScan {})
+                // TODO root page number should not be hardcoded but looked up in db meta
+                let table_page_number = 2; // hard-coded for sample.db, table apples
+                Box::new(ExecScan::new(
+                    table_scan.table_name.to_string(),
+                    table_page_number,
+                    self.database.clone(),
+                ))
             }
             LogicalPlan::Projection(logical_proj) => {
                 let physical_expressions = logical_proj
@@ -67,10 +78,10 @@ pub fn create_physical_expr(
             let schema = input.schema();
             let col_index = schema.index_of_column(&col)?;
             Ok(Box::new(PhysicalColByIndex { col_index }))
-        },
+        }
         datafusion_expr::Expr::Literal(scalar) => {
             let column_value = ColumnValue::One;
-            Ok(Box::new(PhysicalLiteral { value: column_value}))
+            Ok(Box::new(PhysicalLiteral { value: column_value }))
         }
         _ => bail!("cannot create physical expr from {logical_expr}"),
     }

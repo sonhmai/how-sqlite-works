@@ -9,7 +9,7 @@ use crate::physical::plan::exec::Exec;
 pub struct ExecApplesScan {}
 
 impl Exec for ExecApplesScan {
-    fn execute(&self) -> Vec<DataRecord> {
+    fn execute(&mut self) -> Vec<DataRecord> {
         vec![
             DataRecord {
                 values: vec![

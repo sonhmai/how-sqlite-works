@@ -1,7 +1,7 @@
 use anyhow::Result;
 use arrow_schema::Field;
 
-use crate::model::cell::LeafTableCell;
+use crate::model::cell_table_leaf::LeafTableCell;
 use crate::sql::parsing::parse_columns_from_ddl;
 
 /// Schema Table https://www.sqlite.org/schematab.html

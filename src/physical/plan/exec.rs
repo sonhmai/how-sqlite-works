@@ -4,5 +4,5 @@ use crate::model::data_record::DataRecord;
 
 pub trait Exec: Debug {
     // TODO use Iterator?
-    fn execute(&self) -> Vec<DataRecord>;
+    fn execute(&mut self) -> Vec<DataRecord>;
 }

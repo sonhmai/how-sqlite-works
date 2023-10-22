@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crate::model::cell::LeafTableCell;
+use crate::model::cell_table_leaf::LeafTableCell;
 
 use crate::model::db_header::DbHeader;
 use crate::model::page::Page;

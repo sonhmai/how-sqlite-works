@@ -8,4 +8,5 @@ pub mod page;
 pub mod page_id;
 pub mod page_header;
 pub mod schema;
-pub mod cell;
+pub mod cell_table_leaf;
+pub mod cell_table_interior;
