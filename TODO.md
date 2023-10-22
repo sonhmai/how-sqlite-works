@@ -93,7 +93,7 @@ TODO
     - [ ] scan table when table is on 1 page (table `apples` or `oranges` in `sample.db`).
       - [ ] pass test `cli_sql_scan_table_single_page`
     - [ ] scan table that spans multiple pages: interior and table leaf pages.
-      - [ ] add TableInteriorCell (similar to TableLeafCell)
+      - [x] add CellTableInterior (similar to TableLeafCell)
       - [ ] traverse tree with DFS or BFS to return all leaf cells by going thru pointer in interior cell.
       - [ ] pass test `cli_sql_scan_table_multiple_pages`
   - [ ] Stage 2: can work with index table
