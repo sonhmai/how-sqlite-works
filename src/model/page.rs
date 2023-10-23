@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use log::debug;
 
 use crate::model::db_header::DbHeader;
@@ -20,6 +20,7 @@ pub struct Page {
     pub page_header: PageHeader,
     pub page_id: PageId,
     pub data: Vec<u8>, // bytes of the page
+    cell_ptrs: Option<Vec<usize>>, // pointers to data cell of this page
 }
 
 impl Page {
@@ -35,6 +36,7 @@ impl Page {
             page_header: PageHeader::parse(&db[page_offset..])?,
             page_id: PageId { page_number },
             data: db[page_offset..page_offset + page_size].to_owned(),
+            cell_ptrs: None,
         })
     }
 
@@ -48,11 +50,28 @@ impl Page {
             page_header: PageHeader::parse(&db[page_offset..])?,
             page_id: PageId { page_number: 1 },
             data: db[..page_size].to_owned(),
+            cell_ptrs: None,
         })
     }
 
+    // Returns pointer to cell in page of index-th cell
+    pub fn get_cell_ptr(&mut self, index: usize) -> usize {
+        let cell_ptrs = self.cell_ptrs();
+        *cell_ptrs.get(index).unwrap()
+    }
+
     // Return cell pointers of this page
-    pub fn cell_ptrs(&self) -> Vec<usize> {
+    pub fn cell_ptrs(&mut self) -> &Vec<usize> {
+        if self.cell_ptrs.is_none() {
+            self.parse_cell_ptrs();
+        }
+        // &self.cell_ptrs.unwrap() is not correct: trying to return a reference to a value that is owned by the current function
+        // unwrap method returns a temporary value owned by this func.
+        // -> solution: return a reference to the Vec<usize> inside the Option with as_ref on Option
+        self.cell_ptrs.as_ref().unwrap()
+    }
+
+    fn parse_cell_ptrs(&mut self) {
         // must offset extra Db header size if it's the first page
         // first page: DbHeader | PageHeader | CellPointers | ...
         // other page: PageHeader | CellPointers | ...
@@ -62,11 +81,13 @@ impl Page {
 
         debug!("cell ptrs offset {cell_ptrs_offset}, num {num_cells}");
 
-        self.data[cell_ptrs_offset..]
+        let ptrs: Vec<usize> = self.data[cell_ptrs_offset..]
             .chunks_exact(2)
             .take(num_cells)
             .map(|two_bytes| usize::from(u16::from_be_bytes(two_bytes.try_into().unwrap())))
-            .collect()
+            .collect();
+
+        self.cell_ptrs = Some(ptrs);
     }
 
     pub fn get_number_of_cells(&self) -> u16 {
@@ -111,7 +132,7 @@ mod tests {
     fn test_parse_table_leaf_page() {
         let db = db_bytes();
         let first_data_page_number = 2;
-        let page = Page::parse(first_data_page_number, SAMPLE_DB_PAGE_SIZE, db.as_slice()).unwrap();
+        let mut page = Page::parse(first_data_page_number, SAMPLE_DB_PAGE_SIZE, db.as_slice()).unwrap();
 
         // expected header: PageHeader {
         //  page_type: LeafTable, first_free_block_start: 0,
@@ -124,14 +145,14 @@ mod tests {
         assert_eq!(page.page_header.right_child_page_number, None); // leaf page
         let cell_ptrs = page.cell_ptrs();
         assert_eq!(cell_ptrs.len(), 4);
-        assert_eq!(cell_ptrs, vec![4067, 4054, 4029, 4001]);
+        assert_eq!(*cell_ptrs, vec![4067, 4054, 4029, 4001]);
 
     }
 
     #[test]
     fn test_parse_first_page() {
         let db = db_bytes();
-        let page = Page::parse_db_schema_page(db.as_slice(), SAMPLE_DB_PAGE_SIZE).unwrap();
+        let mut page = Page::parse_db_schema_page(db.as_slice(), SAMPLE_DB_PAGE_SIZE).unwrap();
 
         assert_eq!(page.get_page_number(), 1);
         assert_eq!(page.is_db_schema_page(), true);
@@ -139,7 +160,7 @@ mod tests {
         assert_eq!(page.page_header.number_of_cells, 3);
         let cell_ptrs = page.cell_ptrs();
         assert_eq!(cell_ptrs.len(), 3);
-        assert_eq!(cell_ptrs, vec![3983, 3901, 3779]);
+        assert_eq!(*cell_ptrs, vec![3983, 3901, 3779]);
         // uncomment to get the specific bytes or the cell
         // println!("{:?}", &db[3983..3901]);
     }

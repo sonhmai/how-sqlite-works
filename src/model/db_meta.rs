@@ -19,7 +19,7 @@ impl DbMeta {
     pub fn parse(db: &[u8]) -> Result<Self> {
         let db_header = DbHeader::parse(&db[..DbHeader::SIZE])?;
         let page_size: usize = db_header.page_size.try_into()?;
-        let first_page = Page::parse_db_schema_page(db, page_size)?;
+        let mut first_page = Page::parse_db_schema_page(db, page_size)?;
         let page_content_offset = first_page.page_header.content_start_offset;
 
         let leaf_table_cells: Vec<LeafTableCell> = first_page
