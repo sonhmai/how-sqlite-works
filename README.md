@@ -36,7 +36,11 @@ cargo test
 cargo test -- --nocapture
 
 # execute program against a sqlite database
-cargo run -- sql sample.db "select name from apples"
+# this table has 4 rows
+cargo run -- sql tests/resources/sample.db "select name from apples"
+# this table has 6895 rows and span > 1 db page
+cargo run -- sql tests/resources/superheroes.db "select * from superheroes"
+
 # suppress warnings
 RUSTFLAGS=-Awarnings cargo run -- sql sample.db "select name from apples"
 

@@ -9,6 +9,7 @@ pub struct PageHeader {
     pub number_of_cells: u16,
     pub content_start_offset: u16,
     pub fragmented_free_bytes: u8,
+    // right_child_page_number available only when page is an interior table page or index page
     pub right_child_page_number: Option<u32>,
 }
 
@@ -46,6 +47,22 @@ impl PageHeader {
     // https://doc.rust-lang.org/std/keyword.const.html#compile-time-evaluable-functions
     pub const fn is_leaf(&self) -> bool {
         matches!(self.page_type, PageType::LeafIndex | PageType::LeafTable)
+    }
+
+    pub const fn is_table_leaf(&self) -> bool {
+        matches!(self.page_type, PageType::LeafTable)
+    }
+
+    pub const fn is_table_interior(&self) -> bool {
+        matches!(self.page_type, PageType::InteriorTable)
+    }
+
+    pub const fn is_index_leaf(&self) -> bool {
+        matches!(self.page_type, PageType::LeafIndex)
+    }
+
+    pub const fn is_index_interior(&self) -> bool {
+        matches!(self.page_type, PageType::InteriorIndex)
     }
 
     pub const fn size(&self) -> usize {
