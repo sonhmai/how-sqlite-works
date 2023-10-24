@@ -6,6 +6,8 @@ This was inspired by
 - [CodeCrafters SQLite programming challenge](https://app.codecrafters.io/courses/sqlite), please pay them a visit.
 - [SQLite detailed documentation](https://www.sqlite.org/fileformat.html).
 - [Apache Arrow DataFusion](https://github.com/apache/arrow-datafusion).
+- [Let's Build a Simple Database](https://cstack.github.io/db_tutorial/)
+
 
 ## 1. Getting Started
 
