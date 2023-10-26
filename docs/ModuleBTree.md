@@ -223,6 +223,57 @@ Step 3: Iterating over the rows
 - Inside the loop, the sqlite3BtreeNext() function is used to move the cursor to the next row.
 
 
+```
+int sqlite3BtreeNext(BtCursor *pCur, int flags){
+  MemPage *pPage;
+  UNUSED_PARAMETER( flags );  /* Used in COMDB2 but not native SQLite */
+  assert( cursorOwnsBtShared(pCur) );
+  assert( flags==0 || flags==1 );
+  pCur->info.nSize = 0;
+  pCur->curFlags &= ~(BTCF_ValidNKey|BTCF_ValidOvfl);
+  if( pCur->eState!=CURSOR_VALID ) return btreeNext(pCur);
+  
+  pPage = pCur->pPage; // get the page that cursor is pointing to
+  if( (++pCur->ix)>=pPage->nCell ){
+    pCur->ix--;
+    return btreeNext(pCur);
+  }
+  
+  // if the current page is a leaf page, returns SQLITE_OK to indicate 
+  // that the cursor has been successfully moved to the next entry
+  if( pPage->leaf ){
+    return SQLITE_OK;
+  }else{
+    // to move the cursor to the leftmost entry in the next level of the B-Tree.
+    return moveToLeftmost(pCur);
+  }
+}
+
+/*
+** Move the cursor down to the left-most leaf entry beneath the
+** entry to which it is currently pointing.
+**
+** The left-most leaf is the one with the smallest key - the first
+** in ascending order.
+*/
+static int moveToLeftmost(BtCursor *pCur){
+  Pgno pgno;
+  int rc = SQLITE_OK;
+  MemPage *pPage;
+
+  assert( cursorOwnsBtShared(pCur) );
+  assert( pCur->eState==CURSOR_VALID );
+  while( rc==SQLITE_OK && !(pPage = pCur->pPage)->leaf ){
+    assert( pCur->ix<pPage->nCell );
+    pgno = get4byte(findCell(pPage, pCur->ix));
+    rc = moveToChild(pCur, pgno);
+  }
+  return rc;
+}
+```
+
+
 Step 4: Processing each row
+
 
 Step 5: Closing the cursor

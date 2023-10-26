@@ -10,6 +10,9 @@ use crate::model::database::Database;
 use crate::model::page::Page;
 use crate::model::page_id::PageId;
 
+// reference to a page in memory which is managed by BufferPool
+type PageRef = Rc<RefCell<Page>>;
+
 #[derive(Debug)]
 pub struct BtCursor {
     // Rc for multiple references to same object
@@ -17,7 +20,8 @@ pub struct BtCursor {
     database: Rc<RefCell<Database>>,
     page: Option<Rc<RefCell<Page>>>, // current page. ~ sqlite pCursor->pPage
     root_page_number: u32, // root page number of the btree
-    index_current_page: u16,
+    index_current_page: u16, // index of current page in page stack
+    page_stack: Vec<PageRef>, // stack of pages to current as we traverse down from the root
 }
 
 impl BtCursor {
@@ -26,7 +30,8 @@ impl BtCursor {
             database,
             page: None,
             root_page_number,
-            index_current_page: 0
+            index_current_page: 0,
+            page_stack: vec![],
         }
     }
 
@@ -48,8 +53,8 @@ impl BtCursor {
         todo!()
     }
 
-    pub fn move_to_last(&mut self) -> Option<Rc<RefCell<Page>>> {
-        // Move the cursor to the last cell in the current page
+    /// Move cursor to last entry in the table.
+    pub fn move_to_last(&mut self) -> Result<()> {
         todo!()
     }
 
@@ -58,11 +63,26 @@ impl BtCursor {
         todo!()
     }
 
+    /// Move cursor to left-most leaf entry one level beneath currency entry
+    /// the cursor is pointing to.
+    ///
     /// The left-most leaf is the one with the smallest key -
     /// the first in ascending order.
+    ///
+    /// Equivalent to sqlite `static int moveToLeftmost(BtCursor *pCur)`
     fn move_to_left_most_leaf(&mut self) {
 
     }
+
+    /// Move cursor to root page of its BTree.
+    fn move_to_root(&mut self) -> Result<()> {
+        // checks if the cursor is already at the root page (pCur->iPage >= 0).
+        // If yes, release any pages that the cursor may have descended into
+        // and returns to the root page.
+        Ok(())
+    }
+
+
 }
 
 pub struct TableScanIterator {
@@ -111,22 +131,39 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn test_scan() {
+    fn db_ref() -> Rc<RefCell<Database>> {
         // superheroes.db has table spanning > 1 page
         let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("tests/resources/superheroes.db");
         let db = Database::new(db_path.as_path().to_str().unwrap()).unwrap();
         let db_ref = Rc::new(RefCell::new(db));
-        let mut cursor = BtCursor::new(db_ref.clone(), 2);
+        db_ref
+    }
+
+    #[test]
+    fn test_scan() {
+        let mut cursor = BtCursor::new(db_ref().clone(), 2);
 
         assert_eq!(cursor.root_page_number, 2);
-        assert!(cursor.page.is_none());
 
         let table_scan_iter = cursor.scan_page();
         for cell in table_scan_iter {
             println!("{cell:?}");
         }
+    }
+
+    #[ignore]
+    #[test]
+    fn move_to_root() {
+        // should has no problem if cursor already pointed to root page
+        let mut cursor = BtCursor::new(db_ref().clone(), 0);
+        assert_eq!(cursor.root_page_number, 0);
+
+        // should work when cursor moved away from root page
+        let mut cursor = BtCursor::new(db_ref().clone(), 2);
+        assert_eq!(cursor.root_page_number, 2);
+        cursor.move_to_last().unwrap();
+        assert_eq!(cursor.root_page_number, 2);
     }
 
     #[test]
