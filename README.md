@@ -22,7 +22,7 @@ src # source code with unit tests, for a more detailed module description, look 
   logical # things with logical layer like logical plan, not much here as we use arrow-datafusion for this
   model # main domain model of sqlite database like TableLeafCell that mapped to sqlite3 doc concepts
   physical # things related to physical planning and execution
-  recovery # handles recovery for failure and 
+  wal # Write Ahead Logging for atomicity, recovery, etc.
   storage # module handling physical storage to file on disk
   util 
     presentation.rs # how sqlite present returned result to cli stdout (rows)
@@ -79,7 +79,7 @@ Physical Plan (custom)
 BTree Module (custom)
 Buffer Pool (custom)
 Concurrency Control (custom)
-Recovery (custom)
+WAL Write Ahead Logging (custom)
 -----Storage Layer-----
 Disk Manager
 -----Physical File------
@@ -117,7 +117,8 @@ and handling recovery and consistency in case of system failures.
 - Concurrency Control
   - ensures that multiple concurrent operations (e.g. write) can happen and do not
   impact data integrity (data corruption, missing amount, etc.).
-- Recovery
+- Write Ahead Logging
+  - providing Atomicity, Recovery, etc. for the db.
   - managing recovery process and ensure consistency in case of failures/ crashes.
   - uses techniques like logging (e.g. Write Ahead Logging) and periodic checkpoints.
 
