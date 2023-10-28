@@ -1,11 +1,16 @@
+use std::cell::RefCell;
 use std::fs::{self, OpenOptions};
 use std::io::{SeekFrom, Seek, Write};
 use std::path::PathBuf;
+use std::rc::Rc;
 
 use anyhow::Result;
 
 use crate::model::page::Page;
 use crate::model::page_id::PageId;
+
+/// Shared ownership and we want to mutate DiskManager (e.g. for writing)
+pub type SharedDiskManager = Rc<RefCell<DiskManager>>;
 
 /// Provides a logic abstraction for physical file on disk operations.
 #[derive(Debug)]
