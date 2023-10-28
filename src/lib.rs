@@ -1,11 +1,11 @@
+pub mod access;
+pub mod btree;
+pub mod concurrency;
 pub mod logical;
 pub mod model;
 pub mod physical;
 pub mod sql;
-pub mod varint;
 pub mod storage;
-pub mod access;
-pub mod wal;
-pub mod concurrency;
 pub mod util;
-pub mod btree;
+pub mod varint;
+pub mod wal;

@@ -19,7 +19,7 @@ use crate::wal::wal::Wal;
 #[derive(Debug)]
 pub struct BufferPool {
     // current not supporting concurrency
-    page_table: LruCache<PageId, Rc<RefCell<Page>>>,  // page_table keeping track of page in-mem caching
+    page_table: LruCache<PageId, Rc<RefCell<Page>>>, // page_table keeping track of page in-mem caching
     disk_manager: SharedDiskManager,
     // When a transaction is committed, all dirty pages (modified in mem not written to disk)
     // are gathered and written to WAL.
@@ -45,7 +45,8 @@ impl BufferPool {
     /// should be evicted based on the policy and new page added.
     pub fn get_page(&mut self, page_id: PageId) -> Rc<RefCell<Page>> {
         if !self.page_table.contains(&page_id) {
-            let page = self.disk_manager
+            let page = self
+                .disk_manager
                 .borrow_mut()
                 .read_page(page_id)
                 .expect("Failed to read page from disk");
@@ -90,10 +91,8 @@ mod tests {
     use super::*;
 
     fn ref_disk_manager() -> SharedDiskManager {
-        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/resources/sample.db");
-        let disk_manager = DiskManager::new(
-            db_path.to_str().unwrap(), 4096).unwrap();
+        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
+        let disk_manager = DiskManager::new(db_path.to_str().unwrap(), 4096).unwrap();
         let dm_ref = Rc::new(RefCell::new(disk_manager));
         dm_ref.clone()
     }
@@ -105,7 +104,7 @@ mod tests {
         buffer_pool.get_page(PageId { page_number: 4 });
         buffer_pool.get_page(PageId { page_number: 2 });
         buffer_pool.get_page(PageId { page_number: 3 });
-        
+
         // should evict first page added because of 2 capacity
         assert_eq!(buffer_pool.have_page(PageId { page_number: 4 }), false);
         assert_eq!(buffer_pool.have_page(PageId { page_number: 2 }), true);

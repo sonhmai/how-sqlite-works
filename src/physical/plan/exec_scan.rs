@@ -18,7 +18,7 @@ impl ExecScan {
     pub fn new(
         table_name: String,
         table_page_number: u32,
-        database: Rc<RefCell<Database>>
+        database: Rc<RefCell<Database>>,
     ) -> Self {
         let bt_cursor = BtCursor::new(database.clone(), table_page_number);
         ExecScan {

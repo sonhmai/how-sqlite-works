@@ -159,9 +159,7 @@ mod tests {
 
     #[test]
     fn test_wal_header() {
-        let header_mem = WalHeader::new(
-            0x377f0682, 3007000, 4096, 1,
-            12345, 67890, 11111, 22222);
+        let header_mem = WalHeader::new(0x377f0682, 3007000, 4096, 1, 12345, 67890, 11111, 22222);
         let mut temp_file = tempfile().unwrap();
         header_mem.write_to_file(&mut temp_file).unwrap();
         temp_file.seek(std::io::SeekFrom::Start(0)).unwrap(); // Reset the file cursor to the start

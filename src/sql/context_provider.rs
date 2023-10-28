@@ -34,14 +34,10 @@ fn create_table_source(fields: Vec<Field>) -> Arc<dyn TableSource> {
     )))
 }
 
-
-
 impl SqliteContextProvider {
-
     // Create ContextProvider from reading first page of db file for
     // db metadata (db info and schema objects
     pub fn new_for_db(database: &Database) -> SqliteContextProvider {
-
         let mut tables = HashMap::new();
 
         for schema_obj in &database.db_meta.schema_objects {

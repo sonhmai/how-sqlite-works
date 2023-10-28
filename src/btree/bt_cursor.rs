@@ -1,6 +1,6 @@
+use anyhow::Result;
 use std::cell::RefCell;
 use std::rc::Rc;
-use anyhow::Result;
 
 use crate::model::cell_table_interior::CellTableInterior;
 use crate::model::cell_table_leaf::LeafTableCell;
@@ -19,9 +19,9 @@ pub struct BtCursor {
     // RefCell allows mutable borrowing because we would want to modify contained obj
     database: Rc<RefCell<Database>>,
     page: Option<Rc<RefCell<Page>>>, // current page. ~ sqlite pCursor->pPage
-    root_page_number: u32, // root page number of the btree
-    index_current_page: u16, // index of current page in page stack
-    page_stack: Vec<PageRef>, // stack of pages to current as we traverse down from the root
+    root_page_number: u32,           // root page number of the btree
+    index_current_page: u16,         // index of current page in page stack
+    page_stack: Vec<PageRef>,        // stack of pages to current as we traverse down from the root
 }
 
 impl BtCursor {
@@ -37,10 +37,10 @@ impl BtCursor {
 
     pub fn scan_page(&mut self) -> TableScanIterator {
         let page_id = PageId::new(self.root_page_number);
-        TableScanIterator { 
-            database: self.database.clone(), 
-            current_page_id: Some(page_id), 
-            index: 0 
+        TableScanIterator {
+            database: self.database.clone(),
+            current_page_id: Some(page_id),
+            index: 0,
         }
     }
 
@@ -70,9 +70,7 @@ impl BtCursor {
     /// the first in ascending order.
     ///
     /// Equivalent to sqlite `static int moveToLeftmost(BtCursor *pCur)`
-    fn move_to_left_most_leaf(&mut self) {
-
-    }
+    fn move_to_left_most_leaf(&mut self) {}
 
     /// Move cursor to root page of its BTree.
     fn move_to_root(&mut self) -> Result<()> {
@@ -81,8 +79,6 @@ impl BtCursor {
         // and returns to the root page.
         Ok(())
     }
-
-
 }
 
 pub struct TableScanIterator {
@@ -112,16 +108,16 @@ impl Iterator for TableScanIterator {
                         }
                     } else {
                         // Move to the next page
-                        self.current_page_id = page.page_header.right_child_page_number.map(PageId::new);
+                        self.current_page_id =
+                            page.page_header.right_child_page_number.map(PageId::new);
                         self.index = 0;
                     }
-                },
+                }
                 None => return None, // No more pages
             }
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -133,8 +129,8 @@ mod tests {
 
     fn db_ref() -> Rc<RefCell<Database>> {
         // superheroes.db has table spanning > 1 page
-        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/resources/superheroes.db");
+        let db_path =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/superheroes.db");
         let db = Database::new(db_path.as_path().to_str().unwrap()).unwrap();
         let db_ref = Rc::new(RefCell::new(db));
         db_ref
@@ -167,23 +163,14 @@ mod tests {
     }
 
     #[test]
-    fn test_move_to_next() {
-    }
+    fn test_move_to_next() {}
 
     #[test]
-    fn test_move_to_previous() {
-    }
+    fn test_move_to_previous() {}
 
     #[test]
-    fn test_move_to_last() {
-    }
+    fn test_move_to_last() {}
 
     #[test]
-    fn test_move_to_first() {
-    }
+    fn test_move_to_first() {}
 }
-
-
-
-
-

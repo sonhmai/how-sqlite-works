@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use log::debug;
 
 use crate::model::db_header::DbHeader;
@@ -19,7 +19,7 @@ use crate::model::page_id::PageId;
 pub struct Page {
     pub page_header: PageHeader,
     pub page_id: PageId,
-    pub data: Vec<u8>, // bytes of the page
+    pub data: Vec<u8>,             // bytes of the page
     cell_ptrs: Option<Vec<usize>>, // pointers to data cell of this page
 }
 
@@ -75,8 +75,12 @@ impl Page {
         // must offset extra Db header size if it's the first page
         // first page: DbHeader | PageHeader | CellPointers | ...
         // other page: PageHeader | CellPointers | ...
-        let cell_ptrs_offset = self.page_header.size() +
-            if self.is_db_schema_page() { DbHeader::SIZE } else { 0 };
+        let cell_ptrs_offset = self.page_header.size()
+            + if self.is_db_schema_page() {
+                DbHeader::SIZE
+            } else {
+                0
+            };
         let num_cells: usize = self.page_header.number_of_cells.into();
 
         debug!("cell ptrs offset {cell_ptrs_offset}, num {num_cells}");
@@ -122,8 +126,7 @@ mod tests {
 
     fn db_bytes() -> Vec<u8> {
         // CARGO_MANIFEST_DIR is project root /../rust-sqlite
-        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/resources/sample.db");
+        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
         let data = fs::read(db_path).unwrap();
         data
     }
@@ -132,7 +135,8 @@ mod tests {
     fn test_parse_table_leaf_page() {
         let db = db_bytes();
         let first_data_page_number = 2;
-        let mut page = Page::parse(first_data_page_number, SAMPLE_DB_PAGE_SIZE, db.as_slice()).unwrap();
+        let mut page =
+            Page::parse(first_data_page_number, SAMPLE_DB_PAGE_SIZE, db.as_slice()).unwrap();
 
         // expected header: PageHeader {
         //  page_type: LeafTable, first_free_block_start: 0,
@@ -146,7 +150,6 @@ mod tests {
         let cell_ptrs = page.cell_ptrs();
         assert_eq!(cell_ptrs.len(), 4);
         assert_eq!(*cell_ptrs, vec![4067, 4054, 4029, 4001]);
-
     }
 
     #[test]
