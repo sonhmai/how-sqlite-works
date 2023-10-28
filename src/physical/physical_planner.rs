@@ -1,8 +1,8 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use anyhow::bail;
 use datafusion_expr::LogicalPlan;
 use log::{error, info};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use crate::model::column_value::ColumnValue;
 use crate::model::database::Database;
@@ -16,7 +16,7 @@ use crate::physical::plan::exec_projection::ExecProjection;
 use crate::physical::plan::exec_scan::ExecScan;
 
 pub struct PhysicalPlanner {
-    pub database: Rc<RefCell<Database>>
+    pub database: Rc<RefCell<Database>>,
 }
 
 impl PhysicalPlanner {
@@ -81,7 +81,9 @@ pub fn create_physical_expr(
         }
         datafusion_expr::Expr::Literal(scalar) => {
             let column_value = ColumnValue::One;
-            Ok(Box::new(PhysicalLiteral { value: column_value }))
+            Ok(Box::new(PhysicalLiteral {
+                value: column_value,
+            }))
         }
         _ => bail!("cannot create physical expr from {logical_expr}"),
     }

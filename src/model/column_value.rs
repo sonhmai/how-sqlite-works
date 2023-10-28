@@ -1,4 +1,3 @@
-use std::fmt;
 ///
 /// https://www.sqlite.org/datatype3.html
 /// Each value stored in an SQLite database (or manipulated by the database engine) has one of the following storage classes:
@@ -14,7 +13,7 @@ use std::fmt;
 /// Any column in an SQLite version 3 database, except an INTEGER PRIMARY KEY column,
 /// may be used to store a value of any storage class.
 use anyhow::{bail, Result};
-
+use std::fmt;
 
 // TODO optimize - copy for string and bytes values are costly, ok for the rest (int, float,...)
 #[derive(Debug, PartialEq, Clone)]
@@ -97,7 +96,11 @@ impl fmt::Display for ColumnValue {
             }
             ColumnValue::Int32(arr) => write!(f, "{}", i32::from_be_bytes(*arr)),
             ColumnValue::Int48(arr) => {
-                write!(f, "{}", i64::from_be_bytes([0, 0, arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]]))
+                write!(
+                    f,
+                    "{}",
+                    i64::from_be_bytes([0, 0, arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]])
+                )
             }
             ColumnValue::Int64(arr) => write!(f, "{}", i64::from_be_bytes(*arr)),
             ColumnValue::Float64(arr) => write!(f, "{}", f64::from_be_bytes(*arr)),
@@ -120,7 +123,6 @@ impl TryFrom<&ColumnValue> for String {
         })
     }
 }
-
 
 /*
 For usage: i32::try_from(&col_value)

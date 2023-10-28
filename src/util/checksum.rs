@@ -39,7 +39,5 @@ pub fn wal_verify_page(data: &[u8]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_verify_checksum() {
-
-    }
+    fn test_verify_checksum() {}
 }

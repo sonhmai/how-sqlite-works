@@ -1,4 +1,4 @@
-use anyhow::Result; 
+use anyhow::Result;
 
 use crate::varint::decode_varint;
 
@@ -38,8 +38,3 @@ mod tests {
         assert_eq!(cell.rowid, 2);
     }
 }
-
-
-
-
-

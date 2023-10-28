@@ -6,17 +6,15 @@ use std::process::Command;
 fn cli_sql_scan_table_single_page() {
     Command::cargo_bin("rsql")
         .unwrap()
-        .args(&[
-            "sql",
-            "tests/resources/sample.db",
-            "select * from apples;",
-        ])
+        .args(&["sql", "tests/resources/sample.db", "select * from apples;"])
         .assert()
         .success()
-        .stdout(predicates::str::contains(r#"1|Granny Smith|Light Green
+        .stdout(predicates::str::contains(
+            r#"1|Granny Smith|Light Green
 2|Fuji|Red
 3|Honeycrisp|Blush Red
-4|Golden Delicious|Yellow"#));
+4|Golden Delicious|Yellow"#,
+        ));
 }
 
 #[ignore]

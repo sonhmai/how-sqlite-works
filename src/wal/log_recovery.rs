@@ -1,6 +1,6 @@
-use datafusion_expr::to_hex;
 use crate::access::buffer_pool::BufferPool;
 use crate::storage::disk_manager::DiskManager;
+use datafusion_expr::to_hex;
 
 /// LogRecovery reads log file from disk, redo and undo.
 pub struct LogRecovery {
@@ -9,7 +9,6 @@ pub struct LogRecovery {
 }
 
 impl LogRecovery {
-
     /// redo on page level
     pub fn redo(&self) {
         // Read log file from the beginning to end

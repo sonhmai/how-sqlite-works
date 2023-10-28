@@ -1,5 +1,7 @@
+use std::cell::RefCell;
 use std::fs::File;
 use std::io::Read;
+use std::rc::Rc;
 
 use anyhow::Result;
 
@@ -33,13 +35,12 @@ impl Database {
         let db_meta = DbMeta::parse(buf.as_slice())?;
 
         let page_size = db_meta.db_header.page_size;
-        let disk_manager = DiskManager::new(
-            file_path, page_size as usize
-        )?;
+        let disk_manager = DiskManager::new(file_path, page_size as usize)?;
+        let shared_dm = Rc::new(RefCell::new(disk_manager));
         // TODO does Database need ref to DiskManager? why?
         //  If yes, how to have both database and buffer pool refs 1 obj DiskManager?
         // ownership of disk_manager is moved to BufferPool
-        let buffer_pool = BufferPool::new(10, disk_manager);
+        let buffer_pool = BufferPool::new(10, shared_dm.clone());
 
         Ok(Database {
             db_meta,
@@ -50,14 +51,13 @@ impl Database {
 
 #[cfg(test)]
 mod tests {
+    use crate::model::database::Database;
     use std::fs;
     use std::path::PathBuf;
-    use crate::model::database::Database;
 
     #[test]
     fn test_database() {
-        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/resources/sample.db");
+        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
         let db = Database::new(db_path.as_path().to_str().unwrap()).unwrap();
 
         assert_eq!(db.db_meta.db_header.page_size, 4096);

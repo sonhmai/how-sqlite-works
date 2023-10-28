@@ -1,7 +1,7 @@
 use crate::model::data_record::DataRecord;
 
 /// show CLI output in SQLite format
-pub fn sqlite_show(records: & Vec<DataRecord>) {
+pub fn sqlite_show(records: &Vec<DataRecord>) {
     for record in records {
         let formatted_values: Vec<String> = record
             .values

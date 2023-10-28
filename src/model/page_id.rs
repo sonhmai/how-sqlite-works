@@ -2,11 +2,11 @@
 /// because a sqlite database is a single file.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct PageId {
-    pub page_number: u32
+    pub page_number: u32,
 }
 
 impl PageId {
     pub fn new(page_number: u32) -> PageId {
-        PageId{page_number}
+        PageId { page_number }
     }
 }

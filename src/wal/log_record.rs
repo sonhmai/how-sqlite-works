@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone)]
 enum LogRecordType {
     BEGIN,
@@ -14,6 +13,4 @@ struct LogRecord {
     size: i32,
 }
 
-impl LogRecord {
-
-}
+impl LogRecord {}
