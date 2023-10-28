@@ -44,8 +44,30 @@ impl Wal {
         // return Wal object
     }
 
-    /// Write a set of frames to the log.
-    pub fn write_frames(&mut self) {
-        todo!()
+    /// Write a set of frames to the log. Called when a transaction is committed.
+    pub fn write_frames(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// Undo frames written but not committed yet to the wal log.
+    /// Used to rollback a transaction.
+    pub fn undo(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// Checkpoint wal log = copy pages from log to db file.
+    /// Transfer the changes recording in wal log to main db file.
+    pub fn checkpoint(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    /// Close connection to a log file.
+    ///
+    /// Why need an explicit close?
+    /// - Data Integrity: writing remaining data in WAL back to database before
+    /// ending current session.
+    /// - Resource Management: releasing resources like file handle, etc.
+    pub fn close(&mut self) -> Result<()> {
+        Ok(())
     }
 }
