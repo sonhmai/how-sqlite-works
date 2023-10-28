@@ -23,7 +23,7 @@ pub struct BufferPool {
     disk_manager: SharedDiskManager,
     // When a transaction is committed, all dirty pages (modified in mem not written to disk)
     // are gathered and written to WAL.
-    // wal: Wal,
+    wal: Wal,
 }
 
 impl BufferPool {
@@ -33,8 +33,8 @@ impl BufferPool {
         let capacity = NonZeroUsize::new(capacity as usize).expect("Capacity must be non-zero");
         BufferPool {
             page_table: LruCache::new(capacity),
-            disk_manager,
-            // wal: Wal::new().unwrap(),
+            disk_manager: disk_manager.clone(),
+            wal: Wal::new(disk_manager.clone()).unwrap(),
         }
     }
 
