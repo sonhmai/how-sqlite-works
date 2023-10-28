@@ -1,5 +1,7 @@
+use std::cell::RefCell;
 use std::fs::File;
 use std::io::Read;
+use std::rc::Rc;
 
 use anyhow::Result;
 
@@ -36,10 +38,11 @@ impl Database {
         let disk_manager = DiskManager::new(
             file_path, page_size as usize
         )?;
+        let shared_dm = Rc::new(RefCell::new(disk_manager));
         // TODO does Database need ref to DiskManager? why?
         //  If yes, how to have both database and buffer pool refs 1 obj DiskManager?
         // ownership of disk_manager is moved to BufferPool
-        let buffer_pool = BufferPool::new(10, disk_manager);
+        let buffer_pool = BufferPool::new(10, shared_dm.clone());
 
         Ok(Database {
             db_meta,
