@@ -121,6 +121,10 @@ impl Wal {
         })
     }
 
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        todo!()
+    }
+
     /// Write a set of frames to the log. Called when a transaction is committed.
     pub fn write_frames(&mut self) -> Result<()> {
         Ok(())
