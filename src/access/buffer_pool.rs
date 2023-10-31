@@ -6,7 +6,7 @@ use lru::LruCache;
 
 use crate::model::page::Page;
 use crate::model::page_id::PageId;
-use crate::storage::disk_manager::{DiskManager, SharedDiskManager};
+use crate::storage::disk_manager::SharedDiskManager;
 use crate::wal::wal::Wal;
 
 /// BufferPool manages buffering (caching) of pages into mem from disk.
@@ -84,18 +84,9 @@ impl BufferPool {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
-    use crate::storage::disk_manager::DiskManager;
+    use crate::test_utils::ref_disk_manager;
 
     use super::*;
-
-    fn ref_disk_manager() -> SharedDiskManager {
-        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
-        let disk_manager = DiskManager::new(db_path.to_str().unwrap(), 4096).unwrap();
-        let dm_ref = Rc::new(RefCell::new(disk_manager));
-        dm_ref.clone()
-    }
 
     #[test]
     fn test_buffer_pool_evict_page_when_over_capacity() {

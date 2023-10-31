@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use log::debug;
 
 use crate::model::db_header::DbHeader;
@@ -24,6 +24,15 @@ pub struct Page {
 }
 
 impl Page {
+    /// Create a dummy page usually for mocking and testing.
+    pub fn dummy() -> Self {
+        Page {
+            page_header: PageHeader::dummy(),
+            page_id: PageId::new(999),
+            data: vec![],
+            cell_ptrs: None,
+        }
+    }
     const SCHEMA_PAGE_NUM: u32 = 1;
 
     /// page_number: SQLite 1-indexed page number starting with 1
@@ -117,19 +126,11 @@ impl Page {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use std::path::PathBuf;
+    use crate::test_utils::db_bytes;
 
     use super::*;
 
     const SAMPLE_DB_PAGE_SIZE: usize = 4096;
-
-    fn db_bytes() -> Vec<u8> {
-        // CARGO_MANIFEST_DIR is project root /../rust-sqlite
-        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
-        let data = fs::read(db_path).unwrap();
-        data
-    }
 
     #[test]
     fn test_parse_table_leaf_page() {

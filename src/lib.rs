@@ -9,3 +9,4 @@ pub mod storage;
 pub mod util;
 pub mod varint;
 pub mod wal;
+mod test_utils; // private utils for unit tests
