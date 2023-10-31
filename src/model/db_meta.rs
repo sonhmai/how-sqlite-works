@@ -1,6 +1,6 @@
-use crate::model::cell_table_leaf::LeafTableCell;
 use anyhow::Result;
 
+use crate::model::cell_table_leaf::LeafTableCell;
 use crate::model::db_header::DbHeader;
 use crate::model::page::Page;
 use crate::model::schema::SchemaObject;
@@ -47,18 +47,14 @@ impl DbMeta {
 
 #[cfg(test)]
 mod tests {
-    use crate::model::db_meta::DbMeta;
     use log::info;
-    use std::fs;
-    use std::path::PathBuf;
+
+    use crate::model::db_meta::DbMeta;
+    use crate::test_utils::db_bytes;
 
     #[test]
     fn test_parse_db_meta() {
-        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
-        let data = fs::read(db_path).unwrap();
-        let db_slice = data.as_slice();
-
-        let db_meta = DbMeta::parse(db_slice).unwrap();
+        let db_meta = DbMeta::parse(db_bytes().as_slice()).unwrap();
         info!("{db_meta:?}")
     }
 }

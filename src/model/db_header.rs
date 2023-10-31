@@ -96,19 +96,14 @@ impl DbHeader {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use std::path::PathBuf;
-
     use crate::model::db_header::{DbHeader, Enc};
+    use crate::test_utils::db_bytes;
 
     #[test]
     fn test_parse_header_sample_db() {
-        // CARGO_MANIFEST_DIR is project root /../rust-sqlite
-        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
-        let data = fs::read(db_path).unwrap();
-        let db_slice = data.as_slice();
+        let db_bytes = db_bytes();
 
-        let db_header = DbHeader::parse(&db_slice).unwrap();
+        let db_header = DbHeader::parse(&db_bytes.as_slice()).unwrap();
         assert_eq!(db_header.page_size, 4096);
         assert_eq!(db_header.text_encoding, Enc::Utf8);
         assert_eq!(db_header.db_page_count, 4);
