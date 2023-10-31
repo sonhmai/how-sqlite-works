@@ -14,6 +14,11 @@ pub struct PageHeader {
 }
 
 impl PageHeader {
+    /// Create a dummy page header usually for mocking and testing.
+    pub fn dummy() -> Self {
+        todo!()
+    }
+
     pub fn parse(stream: &[u8]) -> Result<Self> {
         let page_type = match stream[0] {
             2 => PageType::InteriorIndex,

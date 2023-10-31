@@ -121,8 +121,14 @@ impl Wal {
         })
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
-        todo!()
+    pub fn from_bytes(bytes: &[u8], disk_manager: SharedDiskManager) -> Result<Self> {
+        let header = WalHeader::from_bytes(bytes[0..32].try_into()?);
+
+        Ok(Wal {
+            disk_manager,
+            frames: vec![], // TODO parse wal frames from bytes
+            header,
+        })
     }
 
     /// Write a set of frames to the log. Called when a transaction is committed.
@@ -155,9 +161,14 @@ impl Wal {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::RefCell;
     use std::io::Seek;
+    use std::rc::Rc;
 
     use tempfile::tempfile;
+    use crate::storage::no_op::NoOpDiskManager;
+
+    use crate::test_utils::file_bytes_vec;
 
     use super::*;
 
@@ -176,5 +187,18 @@ mod tests {
         assert_eq!(header_mem.salt_2, header_deser_file.salt_2);
         assert_eq!(header_mem.checksum_1, header_deser_file.checksum_1);
         assert_eq!(header_mem.checksum_2, header_deser_file.checksum_2);
+    }
+
+    #[test]
+    fn test_parse_simple_wal_from_file() {
+        let wal_bytes = file_bytes_vec("tests/resources/apples_wal.db-wal");
+        let dummy_dm = Rc::new(RefCell::new(NoOpDiskManager{}));
+        let wal = Wal::from_bytes(wal_bytes.as_slice(), dummy_dm).unwrap();
+
+        println!("{wal:?}");
+
+        assert_eq!(wal.header.page_size, 4096);
+        assert_eq!(wal.header.checkpoint_seq, 0);
+        assert_eq!(wal.header.file_format, 3007000);
     }
 }

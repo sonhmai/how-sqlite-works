@@ -24,6 +24,15 @@ pub struct Page {
 }
 
 impl Page {
+    /// Create a dummy page usually for mocking and testing.
+    pub fn dummy() -> Self {
+        Page {
+            page_header: PageHeader::dummy(),
+            page_id: PageId::new(999),
+            data: vec![],
+            cell_ptrs: None,
+        }
+    }
     const SCHEMA_PAGE_NUM: u32 = 1;
 
     /// page_number: SQLite 1-indexed page number starting with 1
