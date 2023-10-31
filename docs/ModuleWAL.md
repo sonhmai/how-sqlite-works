@@ -53,3 +53,4 @@ advancing the state of the database by applying changes from a log.
 ## References
 - [How SQLite helps you do ACID](https://fly.io/blog/sqlite-internals-rollback-journal/)
 - [How SQLite Scales Read Concurrency](https://fly.io/blog/sqlite-internals-wal/)
+- [Forensic examination of SQLite Write Ahead Log (WAL) files](https://sqliteforensictoolkit.com/forensic-examination-of-sqlite-write-ahead-log-wal-files/)
