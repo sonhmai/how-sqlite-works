@@ -1,10 +1,9 @@
 use crate::access::buffer_pool::BufferPool;
-use crate::storage::disk_manager::DiskManager;
-use datafusion_expr::to_hex;
+use crate::storage::disk_manager::SharedDiskManager;
 
 /// LogRecovery reads log file from disk, redo and undo.
 pub struct LogRecovery {
-    disk_manager: DiskManager,
+    disk_manager: SharedDiskManager,
     buffer_pool: BufferPool,
 }
 

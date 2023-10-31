@@ -6,8 +6,8 @@ use std::rc::Rc;
 use anyhow::Result;
 
 use crate::access::buffer_pool::BufferPool;
-use crate::model::db_header::DbHeader;
 use crate::model::db_meta::DbMeta;
+use crate::storage::default::DefaultDiskManager;
 use crate::storage::disk_manager::DiskManager;
 
 const MAGIC_HEADER: [u8; 16] = *b"SQLite format 3\0";
@@ -35,7 +35,7 @@ impl Database {
         let db_meta = DbMeta::parse(buf.as_slice())?;
 
         let page_size = db_meta.db_header.page_size;
-        let disk_manager = DiskManager::new(file_path, page_size as usize)?;
+        let disk_manager = DefaultDiskManager::new(file_path, page_size as usize)?;
         let shared_dm = Rc::new(RefCell::new(disk_manager));
         // TODO does Database need ref to DiskManager? why?
         //  If yes, how to have both database and buffer pool refs 1 obj DiskManager?
@@ -51,9 +51,9 @@ impl Database {
 
 #[cfg(test)]
 mod tests {
-    use crate::model::database::Database;
-    use std::fs;
     use std::path::PathBuf;
+
+    use crate::model::database::Database;
 
     #[test]
     fn test_database() {
