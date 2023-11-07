@@ -21,6 +21,8 @@ pub struct WalHeader {
 }
 
 impl WalHeader {
+    pub const SIZE: usize = 32;
+
     pub fn new(
         magic_number: u32,
         file_format: u32,

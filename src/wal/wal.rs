@@ -13,7 +13,7 @@ use std::io::{Read, Write};
 use anyhow::Result;
 
 use crate::storage::disk_manager::SharedDiskManager;
-use crate::wal::wal_frame::WalFrame;
+use crate::wal::wal_frame::{WalFrame, WalFrameHeader};
 use crate::wal::wal_header::WalHeader;
 
 /// Represent a open write-ahead log file of a database.
@@ -40,12 +40,31 @@ impl Wal {
         })
     }
 
+    /// Create Wal from bytes.
+    ///
+    /// bytes: byte slice of wal file, not containing other things.
     pub fn from_bytes(bytes: &[u8], disk_manager: SharedDiskManager) -> Result<Self> {
-        let header = WalHeader::from_bytes(bytes[0..32].try_into()?);
+        let header = WalHeader::from_bytes(bytes[0..WalHeader::SIZE].try_into()?);
+        let wal_n_bytes = bytes.len();
+        println!("{wal_n_bytes}");
+        let frame_size = header.page_size as usize + WalFrameHeader::SIZE;
+        let n_frames = (wal_n_bytes - WalHeader::SIZE) / frame_size;
+
+        let mut frames: Vec<WalFrame> = vec![];
+        let mut bytes_cursor = WalHeader::SIZE;
+
+        for i in 0..n_frames {
+            let wal_frame = WalFrame::from_bytes(
+                &bytes[bytes_cursor..bytes_cursor + frame_size],
+                header.page_size as usize
+            )?;
+            frames.push(wal_frame);
+            bytes_cursor += frame_size;
+        }
 
         Ok(Wal {
             disk_manager,
-            frames: vec![], // TODO parse wal frames from bytes
+            frames, // TODO parse wal frames from bytes
             header,
         })
     }
@@ -99,5 +118,15 @@ mod tests {
         assert_eq!(wal.header.page_size, 4096);
         assert_eq!(wal.header.checkpoint_seq, 0);
         assert_eq!(wal.header.file_format, 3007000);
+
+        assert_eq!(wal.frames.len(), 1);
+
+        /// A frame is considered valid if and only if the following conditions are true:
+        ///   1. The salt-1 and salt-2 values in the frame-header match salt values in the wal-header.
+        ///   2. The checksum values in the final 8 bytes of the frame-header exactly match
+        ///   the checksum computed consecutively on the first 24 bytes of the WAL header and
+        ///   the first 8 bytes and the content of all frames up to and including the current frame.
+        assert_eq!(wal.frames[0].header.salt_1, wal.header.salt_1);
+        assert_eq!(wal.frames[0].header.salt_2, wal.header.salt_2);
     }
 }

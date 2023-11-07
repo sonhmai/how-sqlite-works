@@ -17,6 +17,9 @@ pub struct WalFrameHeader {
 }
 
 impl WalFrameHeader {
+
+    pub const SIZE: usize = 24;
+
     pub fn from_bytes(bytes: &[u8; 24]) -> Result<Self> {
         Ok(WalFrameHeader {
             page_number: u32::from_be_bytes(bytes[0..4].try_into()?),
@@ -31,6 +34,9 @@ impl WalFrameHeader {
 
 /// A WAL has zero or more WalFrame.
 /// 24-byte frame-header followed by a page-size bytes of page data.
+///
+/// WalFrame size = 24B (header) + page_size in bytes.
+/// For example, a wal_frame has size of 4120B in case db page size is 4096B.
 ///
 /// A frame is considered valid if and only if the following conditions are true:
 ///   1. The salt-1 and salt-2 values in the frame-header match salt values in the wal-header.
@@ -51,7 +57,7 @@ impl WalFrame {
             header,
             // TODO copying the bytes allocates extra memory on heap.
             //  Should a Page is parsed here?
-            data: bytes[24..24 + page_size].to_vec()
+            data: bytes[WalFrameHeader::SIZE..WalFrameHeader::SIZE + page_size].to_vec()
         })
     }
 }
