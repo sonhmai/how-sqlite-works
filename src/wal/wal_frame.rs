@@ -1,6 +1,7 @@
 /*
 https://www.sqlite.org/fileformat2.html#walformat
  */
+use anyhow::Result;
 
 /// 24-byte frame-header.
 #[derive(Debug, Clone)]
@@ -15,6 +16,19 @@ pub struct WalFrameHeader {
     pub checksum_2: u32, // Second half of the cumulative checksum.
 }
 
+impl WalFrameHeader {
+    pub fn from_bytes(bytes: &[u8; 24]) -> Result<Self> {
+        Ok(WalFrameHeader {
+            page_number: u32::from_be_bytes(bytes[0..4].try_into()?),
+            db_size_after_commit: u32::from_be_bytes(bytes[4..8].try_into()?),
+            salt_1: u32::from_be_bytes(bytes[8..12].try_into()?),
+            salt_2: u32::from_be_bytes(bytes[12..16].try_into()?),
+            checksum_1: u32::from_be_bytes(bytes[16..20].try_into()?),
+            checksum_2: u32::from_be_bytes(bytes[20..24].try_into()?),
+        })
+    }
+}
+
 /// A WAL has zero or more WalFrame.
 /// 24-byte frame-header followed by a page-size bytes of page data.
 ///
@@ -27,4 +41,38 @@ pub struct WalFrameHeader {
 pub struct WalFrame {
     pub header: WalFrameHeader,
     pub data: Vec<u8>,
+}
+
+impl WalFrame {
+    pub fn from_bytes(bytes: &[u8], page_size: usize) -> Result<Self> {
+        let header = WalFrameHeader::from_bytes(bytes[0..24].try_into()?)?;
+
+        Ok(WalFrame {
+            header,
+            // TODO copying the bytes allocates extra memory on heap.
+            //  Should a Page is parsed here?
+            data: bytes[24..24 + page_size].to_vec()
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::test_utils::file_bytes_vec;
+    use crate::wal::wal_frame::WalFrame;
+
+    #[test]
+    fn test_parse_single_wal_frame() {
+        let wal_bytes = file_bytes_vec("tests/resources/apples_wal.db-wal");
+        let page_size = 4096;
+        let wal_frame = WalFrame::from_bytes(
+            &wal_bytes.as_slice()[32..], // skip first 32 bytes of WalHeader
+            page_size
+        ).unwrap();
+
+        println!("{wal_frame:?}");
+
+        assert_eq!(wal_frame.header.page_number, 2);
+        assert_eq!(wal_frame.header.db_size_after_commit, 2);
+    }
 }
