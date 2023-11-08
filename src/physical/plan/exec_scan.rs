@@ -34,7 +34,11 @@ impl Exec for ExecScan {
     fn execute(&mut self) -> Vec<DataRecord> {
         let mut records = Vec::new();
 
-        while let Some(record) = self.bt_cursor.move_to_next() {
+        while self.bt_cursor.move_to_next().is_ok() {
+            // TODO - parse record from Btree, not hardcode
+            let payload = vec![1];
+            let record = DataRecord::parse_from(1, &payload);
+
             records.push(record);
         }
 
