@@ -26,9 +26,51 @@ Mapping equivalent components this implementation -> SQLite:
 ## What SQLite does
 
 Control data structures
+- 1 Btree --> 1 db file (not a single B- or B+ tree)
+- 1 BtreeCursor --> a specific tree identified by its root page (a table, index, etc.)
+  - a cursor has to be either a read or write, not both.
+  - can be many open cursors on same tree, each created by calling `fn sqlite3BtreeCursor`
 
-To operate on a specific tree in db
-- VM open tree by creating cursor on tree `sqlite3BtreeCursor`
+
+### Btree Module interfaces
+1. sqlite3BtreeOpen
+2. sqlite3BtreeClose
+3. sqlite3BtreeCursor opens cursor to a specfic tree in db file (table, index, etc.).
+4. sqlite3BtreeCloseCursor
+5. sqlite3BtreeClearCursor
+6. `sqlite3BtreeFirst` 
+-- fn acts on cursor, moves cursor to first element of tree (left most node).
+7. sqlite3BtreeLast
+8. sqlite3BtreeNext
+9. `sqlite3BtreePrevious` 
+-- moves cursor to previous element.
+10. sqlite3BtreeMoveToUnpacked 
+-- moves cursor to element that matches key value passed as argument. if no exact match, cursor points to leaf page would hold the entry (to an entry that comes before or after the key).
+11. sqlite3BtreeBeginTrans
+12. sqlite3BtreeCommitPhaseOne
+13. sqlite3BtreeCommitPhaseTwo
+14. sqlite3BtreeDelete
+15. sqlite3BtreeInsert
+16. `sqlite3BtreeKeySize`
+-- fn acts on cursor, returns number of bytes of key cursor pointing to, 0 if pointing to no valid entry.
+17. sqlite3BtreeKey
+18. sqlite3BtreeDataSize
+19. sqlite3BtreeData
+20. sqlite3BtreeGetMeta returns db metadata.
+
+
+### B+-tree Structure
+
+- B+ tree is a variant of B-tree, all entries in leaf nodes.
+- An entry = (key value, data value) pair
+- entries are sorted by `key value`
+- internal nodes contain only search info (key values) and child pointers. `P(0) <= Key(0) < P(1) <= Key(1) < ...`
+  - All keys on the left most child subtree that Ptr(0) points to have values less than or equal to Key(0);
+  - All keys on the child subtree Ptr(l) points to have values greater than Key(0) and less than or equal to Key(1), and so forth;
+  - All keys on right most child subtree that Ptr(n) points to have values greater than Key(n- 1).
+
+
+![img.png](BTreeInternalNode.png)
 
 
 ### Btree struct: a Btree handle
