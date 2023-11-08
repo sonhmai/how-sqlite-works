@@ -1,11 +1,9 @@
-use anyhow::Result;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::model::cell_table_interior::CellTableInterior;
-use crate::model::cell_table_leaf::LeafTableCell;
-use crate::model::data_record::DataRecord;
+use anyhow::Result;
 
+use crate::model::cell_table_leaf::LeafTableCell;
 use crate::model::database::Database;
 use crate::model::page::Page;
 use crate::model::page_id::PageId;
@@ -18,18 +16,31 @@ pub struct BtCursor {
     // Rc for multiple references to same object
     // RefCell allows mutable borrowing because we would want to modify contained obj
     database: Rc<RefCell<Database>>,
-    page: Option<Rc<RefCell<Page>>>, // current page. ~ sqlite pCursor->pPage
-    root_page_number: u32,           // root page number of the btree
-    index_current_page: u16,         // index of current page in page stack
-    page_stack: Vec<PageRef>,        // stack of pages to current as we traverse down from the root
+    // current page cursor is pointing to. ~ sqlite pCursor->pPage
+    page: Rc<RefCell<Page>>,
+    // root page number of the btree
+    root_page_number: u32,
+    // index of current cell in current page that cursor is pointing to
+    index_current_cell: u16,
+    // index of current page in page stack
+    index_current_page: u16,
+    // stack of pages to current as we traverse down from the root
+    page_stack: Vec<PageRef>,
 }
 
 impl BtCursor {
     pub fn new(database: Rc<RefCell<Database>>, root_page_number: u32) -> Self {
+        let page_id = PageId::new(root_page_number);
+        let page = database
+            .borrow_mut()
+            .buffer_pool
+            .get_page(page_id);
+
         BtCursor {
             database,
-            page: None,
+            page,
             root_page_number,
+            index_current_cell: 0,
             index_current_page: 0,
             page_stack: vec![],
         }
@@ -44,8 +55,43 @@ impl BtCursor {
         }
     }
 
-    pub fn move_to_next(&mut self) -> Option<DataRecord> {
-        todo!()
+    fn page_ref(&mut self) -> Rc<RefCell<Page>> {
+        self.page.clone()
+    }
+
+    /// Advance cursor to next entry in btree.
+    pub fn move_to_next(&mut self) -> Result<()> {
+        let page = self.page_ref();
+
+        // if cursor is at the last cell of current page, go to next page
+        let index_next_cell = self.index_current_cell + 1;
+        if index_next_cell >= page.borrow().get_number_of_cells() {
+            return self.next_entry_next_page();
+        }
+
+        // we know that we are not at the last cell of page, so cursor can advance.
+        self.index_current_cell = index_next_cell;
+        // if page is an interior, we want to move to left most leaf
+        // so that cursor can point to the next entry.
+        return if page.borrow().is_leaf() {
+            Ok(())
+        } else {
+            self.move_to_left_most_leaf()
+        };
+    }
+
+    /// Move to the next entry in the next page in case the cursor
+    /// is currently at the last cell of current page (not possible to
+    /// advance cell counter in current page).
+    fn next_entry_next_page(&mut self) -> Result<()> {
+        self.index_current_cell += 1;
+        let current_index = self.index_current_cell;
+
+        // TODO handle case page leaf/ interior
+        let page = self.page_ref();
+        if page.borrow().is_interior() {}
+
+        Ok(())
     }
 
     pub fn move_to_previous(&mut self) -> Option<Rc<RefCell<Page>>> {
@@ -70,7 +116,9 @@ impl BtCursor {
     /// the first in ascending order.
     ///
     /// Equivalent to sqlite `static int moveToLeftmost(BtCursor *pCur)`
-    fn move_to_left_most_leaf(&mut self) {}
+    fn move_to_left_most_leaf(&mut self) -> Result<()> {
+        Ok(())
+    }
 
     /// Move cursor to root page of its BTree.
     fn move_to_root(&mut self) -> Result<()> {
@@ -150,7 +198,7 @@ mod tests {
 
     #[ignore]
     #[test]
-    fn move_to_root() {
+    fn test_move_to_root() {
         // should has no problem if cursor already pointed to root page
         let mut cursor = BtCursor::new(db_ref().clone(), 0);
         assert_eq!(cursor.root_page_number, 0);
