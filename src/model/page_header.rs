@@ -54,6 +54,10 @@ impl PageHeader {
         matches!(self.page_type, PageType::LeafIndex | PageType::LeafTable)
     }
 
+    pub const fn is_interior(&self) -> bool {
+        matches!(self.page_type, PageType::LeafIndex | PageType::LeafTable)
+    }
+
     pub const fn is_table_leaf(&self) -> bool {
         matches!(self.page_type, PageType::LeafTable)
     }

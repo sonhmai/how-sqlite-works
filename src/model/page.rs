@@ -63,13 +63,13 @@ impl Page {
         })
     }
 
-    // Returns pointer to cell in page of index-th cell
+    /// Returns pointer to cell in page of index-th cell
     pub fn get_cell_ptr(&mut self, index: usize) -> usize {
         let cell_ptrs = self.cell_ptrs();
         *cell_ptrs.get(index).unwrap()
     }
 
-    // Return cell pointers of this page
+    /// Return cell pointers of this page
     pub fn cell_ptrs(&mut self) -> &Vec<usize> {
         if self.cell_ptrs.is_none() {
             self.parse_cell_ptrs();
@@ -78,6 +78,16 @@ impl Page {
         // unwrap method returns a temporary value owned by this func.
         // -> solution: return a reference to the Vec<usize> inside the Option with as_ref on Option
         self.cell_ptrs.as_ref().unwrap()
+    }
+
+    /// Return whether page is a leaf page (table or index)
+    pub fn is_leaf(&self) -> bool {
+        self.page_header.is_leaf()
+    }
+
+    /// Return whether page is a leaf page (table or index)
+    pub fn is_interior(&self) -> bool {
+        self.page_header.is_interior()
     }
 
     fn parse_cell_ptrs(&mut self) {
