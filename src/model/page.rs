@@ -63,7 +63,12 @@ impl Page {
         })
     }
 
-    /// Returns pointer to cell in page of index-th cell
+    /// Returns pointer to where cell bytes start in page's bytes of index-th cell.
+    /// For example: a page has 4096 bytes, the cell we want located at bytes[2000,2010],
+    /// this function returns 2000.
+    ///
+    /// If cell pointers of a page are [4067, 4054, 4029, 4001], cell_ptr an index 0 is 4067.
+    /// First cell is at the end of a sqlite page, then it grows towards the beginning.
     pub fn get_cell_ptr(&mut self, index: usize) -> usize {
         let cell_ptrs = self.cell_ptrs();
         *cell_ptrs.get(index).unwrap()
@@ -161,6 +166,10 @@ mod tests {
         let cell_ptrs = page.cell_ptrs();
         assert_eq!(cell_ptrs.len(), 4);
         assert_eq!(*cell_ptrs, vec![4067, 4054, 4029, 4001]);
+        assert_eq!(page.get_cell_ptr(0), 4067);
+        assert_eq!(page.get_cell_ptr(1), 4054);
+        assert_eq!(page.get_cell_ptr(2), 4029);
+        assert_eq!(page.get_cell_ptr(3), 4001);
     }
 
     #[test]

@@ -76,21 +76,59 @@ impl BtCursor {
         return if page.borrow().is_leaf() {
             Ok(())
         } else {
-            self.move_to_left_most_leaf()
+            self.move_to_left_most_leaf_entry()
         };
     }
 
     /// Move to the next entry in the next page in case the cursor
     /// is currently at the last cell of current page (not possible to
     /// advance cell counter in current page).
+    ///
+    /// Similar to btreeNext(BtCursor *pCur) in sqlite source.
     fn next_entry_next_page(&mut self) -> Result<()> {
+        /*
+        steps
+        - increment cursor current cell index to point to next cell
+        - if index >= last cell (current page cell num)
+            - leaf page -> cursor pass last entry in whole Btree
+                -> INVALID cursor, somehow should signal caller we're done.
+            - not leaf page (interior) -> move cursor to child page, then move to leftmost cell in child page.
+        - else: case index within current page
+            - current page is leaf
+                - return Ok
+            - current page is interior == cursor moved to cell that is pointer to another page.
+            Remind that interior Btree has structure | Ptr0 | Key0 | Ptr1 | Key1 | ...
+            Here it's not an data entry.
+                - move to leftmost cell in leaf child page beneath current.
+         */
         self.index_current_cell += 1;
         let current_index = self.index_current_cell;
 
-        // TODO handle case page leaf/ interior
-        let page = self.page_ref();
-        if page.borrow().is_interior() {}
+        let mut page = self.page_ref();
+        if page.borrow().is_interior() {
+            // case current page is not a leaf page:
+            // - extract child page number from the cell at current index of current page.
+            // - move cursor to child page the cell at current index is pointing to.
+            // - then, move cursor to leftmost cell of the child page.
+            // Why leftmost? because in a B-Tree, the leftmost cell in a child page
+            // is the next cell in ascending order after the parent cell.
+            let current_cell_ptr = page
+                .borrow_mut() // TODO really need mut?
+                .get_cell_ptr(self.index_current_cell as usize);
+            let child_page_num = u32::from_be_bytes(page
+                .borrow()
+                .data[current_cell_ptr..current_cell_ptr + 4]
+                .try_into()?);
+            self.move_to_child(child_page_num)?;
+            self.move_to_left_most_leaf_entry()?;
+        }
 
+        Ok(())
+    }
+
+    /// Move cursor down to a new child page.
+    /// child_page_no is the page number of the child page to move to.
+    fn move_to_child(&mut self, child_page_no: u32) -> Result<()> {
         Ok(())
     }
 
@@ -109,6 +147,15 @@ impl BtCursor {
         todo!()
     }
 
+    /// Move the cursor to the right-most leaf entry beneath the page
+    /// to which it is pointing.
+    ///
+    /// The right-most entry is the one with the largest key -
+    /// the last key in ascending order.
+    fn move_to_right_most_leaf_entry(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Move cursor to left-most leaf entry one level beneath currency entry
     /// the cursor is pointing to.
     ///
@@ -116,7 +163,7 @@ impl BtCursor {
     /// the first in ascending order.
     ///
     /// Equivalent to sqlite `static int moveToLeftmost(BtCursor *pCur)`
-    fn move_to_left_most_leaf(&mut self) -> Result<()> {
+    fn move_to_left_most_leaf_entry(&mut self) -> Result<()> {
         Ok(())
     }
 
