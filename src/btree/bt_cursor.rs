@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 
 use crate::model::cell_table_leaf::LeafTableCell;
 use crate::model::database::Database;
@@ -96,34 +96,52 @@ impl BtCursor {
         - else: case index within current page
             - current page is leaf
                 - return Ok
-            - current page is interior == cursor moved to cell that is pointer to another page.
+            - move to leftmost cell in leaf child page beneath current. Why?
+            current page is interior == cursor moved to cell that is pointer to another page.
             Remind that interior Btree has structure | Ptr0 | Key0 | Ptr1 | Key1 | ...
             Here it's not an data entry.
-                - move to leftmost cell in leaf child page beneath current.
          */
         self.index_current_cell += 1;
         let current_index = self.index_current_cell;
+        let mut page_rc = self.page_ref();
 
-        let mut page = self.page_ref();
-        if page.borrow().is_interior() {
+        let page = page_rc.borrow();
+
+        if page.is_leaf() {
+            if current_index < page.get_number_of_cells() {
+                Ok(())
+            } else {
+                // index >= page num cells -> cursor pass last entry in whole Btree
+                // TODO find a better mechanism to signal caller than bail with anyhow::Error
+                bail!("iterated pass the last entry!")
+            }
+        } else if page_rc.borrow().is_interior() {
             // case current page is not a leaf page:
             // - extract child page number from the cell at current index of current page.
             // - move cursor to child page the cell at current index is pointing to.
             // - then, move cursor to leftmost cell of the child page.
             // Why leftmost? because in a B-Tree, the leftmost cell in a child page
             // is the next cell in ascending order after the parent cell.
-            let current_cell_ptr = page
-                .borrow_mut() // TODO really need mut?
-                .get_cell_ptr(self.index_current_cell as usize);
-            let child_page_num = u32::from_be_bytes(page
-                .borrow()
-                .data[current_cell_ptr..current_cell_ptr + 4]
-                .try_into()?);
+            let child_page_num = self.get_child_page_num();
             self.move_to_child(child_page_num)?;
-            self.move_to_left_most_leaf_entry()?;
+            self.move_to_left_most_leaf_entry()
+        } else {
+            bail!("page type invalid: not leaf nor interior!")
         }
+    }
 
-        Ok(())
+    fn get_child_page_num(&mut self) -> u32 {
+        let mut page_rc = self.page_ref();
+        let current_cell_ptr = page_rc
+            .borrow_mut() // TODO really need mut?
+            .get_cell_ptr(self.index_current_cell as usize);
+        let child_page_num = u32::from_be_bytes(page_rc
+            .borrow()
+            .data[current_cell_ptr..current_cell_ptr + 4]
+            .try_into()
+            .unwrap()
+        );
+        child_page_num
     }
 
     /// Move cursor down to a new child page.
@@ -164,7 +182,18 @@ impl BtCursor {
     ///
     /// Equivalent to sqlite `static int moveToLeftmost(BtCursor *pCur)`
     fn move_to_left_most_leaf_entry(&mut self) -> Result<()> {
-        Ok(())
+        let mut action_result = Ok(());
+
+        loop {
+            if self.page.borrow().is_leaf() || action_result.is_err() {
+                break;
+            }
+            assert!(self.index_current_cell < self.page.borrow().get_number_of_cells());
+            let child_page_no = self.get_child_page_num();
+            action_result = self.move_to_child(child_page_no);
+        }
+
+        action_result
     }
 
     /// Move cursor to root page of its BTree.
