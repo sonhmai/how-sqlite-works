@@ -56,7 +56,7 @@ impl Wal {
         for i in 0..n_frames {
             let wal_frame = WalFrame::from_bytes(
                 &bytes[bytes_cursor..bytes_cursor + frame_size],
-                header.page_size as usize
+                header.page_size as usize,
             )?;
             frames.push(wal_frame);
             bytes_cursor += frame_size;
@@ -121,11 +121,13 @@ mod tests {
 
         assert_eq!(wal.frames.len(), 1);
 
-        /// A frame is considered valid if and only if the following conditions are true:
-        ///   1. The salt-1 and salt-2 values in the frame-header match salt values in the wal-header.
-        ///   2. The checksum values in the final 8 bytes of the frame-header exactly match
-        ///   the checksum computed consecutively on the first 24 bytes of the WAL header and
-        ///   the first 8 bytes and the content of all frames up to and including the current frame.
+        /*
+        A frame is considered valid if and only if the following conditions are true:
+          1. The salt-1 and salt-2 values in the frame-header match salt values in the wal-header.
+          2. The checksum values in the final 8 bytes of the frame-header exactly match
+          the checksum computed consecutively on the first 24 bytes of the WAL header and
+          the first 8 bytes and the content of all frames up to and including the current frame.
+         */
         assert_eq!(wal.frames[0].header.salt_1, wal.header.salt_1);
         assert_eq!(wal.frames[0].header.salt_2, wal.header.salt_2);
     }
