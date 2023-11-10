@@ -147,6 +147,17 @@ impl BtCursor {
     /// Move cursor down to a new child page.
     /// child_page_no is the page number of the child page to move to.
     fn move_to_child(&mut self, child_page_no: u32) -> Result<()> {
+        /*
+        - update cursor state:
+            - save current index and page in page stack and index stack
+                pCur->aiIdx[pCur->iPage] = pCur->ix;
+                pCur->apPage[pCur->iPage] = pCur->pPage;
+            - reset current index to 0
+            - increment page depth: pCur->iPage++;
+        - calls getAndInitPage to fetch and initialize the child page child_page_no.
+        getAndInitPage uses BufferPool to get page.
+        - check integrity of child page
+         */
         Ok(())
     }
 
