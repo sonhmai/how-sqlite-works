@@ -24,6 +24,9 @@ pub struct Page {
 }
 
 impl Page {
+    // page number in sqlite in 1-indexed (starts from 1, not 0)
+    pub const PAGE_NUM_DB_ROOT: u32 = 1;
+
     /// Create a dummy page usually for mocking and testing.
     pub fn dummy() -> Self {
         Page {
@@ -33,34 +36,37 @@ impl Page {
             cell_ptrs: None,
         }
     }
-    const SCHEMA_PAGE_NUM: u32 = 1;
 
     /// page_number: SQLite 1-indexed page number starting with 1
     pub fn parse(page_number: u32, page_size: usize, db: &[u8]) -> Result<Self> {
-        assert!(page_number >= 2);
-        // page number in sqlite is 1-indexed (starts from 1, not 0)
-        let page_offset = usize::try_from(page_number - 1)? * page_size;
+        // page number in sqlite is 1-indexed (starts from 1, not 0).
+        // >=2 is from the second page.
+        if page_number >= 2 {
+            let page_offset = usize::try_from(page_number - 1)? * page_size;
 
-        Ok(Page {
-            page_header: PageHeader::parse(&db[page_offset..])?,
-            page_id: PageId { page_number },
-            data: db[page_offset..page_offset + page_size].to_owned(),
-            cell_ptrs: None,
-        })
+            Ok(Page {
+                page_header: PageHeader::parse(&db[page_offset..])?,
+                page_id: PageId { page_number },
+                data: db[page_offset..page_offset + page_size].to_owned(),
+                cell_ptrs: None,
+            })
+        } else {
+            // first page data starts after the DBHeader 100 bytes
+            // https://www.sqlite.org/fileformat.html#b_tree_pages
+            let page_offset = DbHeader::SIZE;
+
+            Ok(Self {
+                page_header: PageHeader::parse(&db[page_offset..])?,
+                page_id: PageId { page_number: 1 },
+                data: db[..page_size].to_owned(),
+                cell_ptrs: None,
+            })
+        }
     }
 
     // Parse the first page of db file which is also the dn schema page.
     pub fn parse_db_schema_page(db: &[u8], page_size: usize) -> Result<Self> {
-        // first page data starts after the DBHeader 100 bytes
-        // https://www.sqlite.org/fileformat.html#b_tree_pages
-        let page_offset = DbHeader::SIZE;
-
-        Ok(Self {
-            page_header: PageHeader::parse(&db[page_offset..])?,
-            page_id: PageId { page_number: 1 },
-            data: db[..page_size].to_owned(),
-            cell_ptrs: None,
-        })
+        Self::parse(Self::PAGE_NUM_DB_ROOT, page_size, db)
     }
 
     /// Returns pointer to where cell bytes start in page's bytes of index-th cell.
@@ -135,7 +141,7 @@ impl Page {
     }
 
     fn is_db_schema_page(&self) -> bool {
-        self.page_id.page_number == Page::SCHEMA_PAGE_NUM
+        self.page_id.page_number == Page::PAGE_NUM_DB_ROOT
     }
 }
 
