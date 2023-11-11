@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use crate::access::buffer_pool::BufferPool;
 use anyhow::{bail, Result};
 
 use crate::model::cell_table_leaf::LeafTableCell;
@@ -13,28 +14,39 @@ type PageRef = Rc<RefCell<Page>>;
 
 #[derive(Debug)]
 pub struct BtCursor {
-    // Rc for multiple references to same object
-    // RefCell allows mutable borrowing because we would want to modify contained obj
+    /// Rc for multiple references to same object
+    /// RefCell allows mutable borrowing because we would want to modify contained obj
     database: Rc<RefCell<Database>>,
-    // current page cursor is pointing to. ~ sqlite pCursor->pPage
+    /// current page cursor is pointing to. ~ sqlite pCursor->pPage
     page: Rc<RefCell<Page>>,
-    // root page number of the btree
+    /// root page number of the btree
     root_page_number: u32,
-    // index of current cell in current page that cursor is pointing to
+    /// index of current cell in current page that cursor is pointing to
     index_current_cell: u16,
-    // index of current page in page stack
+
+    /// Index of current page in page stack, increased when the cursor move_to_child
+    /// (one level down the tree).
     index_current_page: u16,
-    // stack of pages to current as we traverse down from the root
+
+    /// Stack of pages to current as we traverse down from the root.
+    /// If the tree has 3 level and the cursor is at level 3 (index 2) the page_stack is
+    /// - page_stack(2) = ptr to leaf page at level 3
+    /// - page_stack(1) = ptr to interior page at level 2
+    /// - page_stack(0) = ptr to interior page at level 1 (root)
     page_stack: Vec<PageRef>,
+
+    /// Array of u16 current cell indices that cursor is accessing.
+    /// Equivalent to `pCur->aiIdx` in sqlite source, type `u16 aiIdx[BTCURSOR_MAX_DEPTH-1]`.
+    /// `&cell_index_stack[1]` is the cell index of page at level 1 in page_stack `&page_stack[1]`
+    /// that the cursor is/ was accessing.
+    cell_index_stack: Vec<u16>,
 }
 
 impl BtCursor {
+    /// root_page_number is 0-indexed. Db first page with db meta has page number 0.
     pub fn new(database: Rc<RefCell<Database>>, root_page_number: u32) -> Self {
         let page_id = PageId::new(root_page_number);
-        let page = database
-            .borrow_mut()
-            .buffer_pool
-            .get_page(page_id);
+        let page = database.borrow_mut().buffer_pool.get_page(page_id);
 
         BtCursor {
             database,
@@ -43,6 +55,7 @@ impl BtCursor {
             index_current_cell: 0,
             index_current_page: 0,
             page_stack: vec![],
+            cell_index_stack: vec![],
         }
     }
 
@@ -135,11 +148,10 @@ impl BtCursor {
         let current_cell_ptr = page_rc
             .borrow_mut() // TODO really need mut?
             .get_cell_ptr(self.index_current_cell as usize);
-        let child_page_num = u32::from_be_bytes(page_rc
-            .borrow()
-            .data[current_cell_ptr..current_cell_ptr + 4]
-            .try_into()
-            .unwrap()
+        let child_page_num = u32::from_be_bytes(
+            page_rc.borrow().data[current_cell_ptr..current_cell_ptr + 4]
+                .try_into()
+                .unwrap(),
         );
         child_page_num
     }
@@ -155,9 +167,47 @@ impl BtCursor {
             - reset current index to 0
             - increment page depth: pCur->iPage++;
         - calls getAndInitPage to fetch and initialize the child page child_page_no.
-        getAndInitPage uses BufferPool to get page.
+        getAndInitPage uses Pager to get page. Set BtCursor->pPage to that page.
         - check integrity of child page
+
+        pCur->aiIdx u16 aiIdx[BTCURSOR_MAX_DEPTH-1]: array of u16 current cell indices at apPage[i]
+        that cursor is accessing. apPage[iPage] is a pointer to the page at depth iPage
+            -> BtCursor.cell_index_stack
+
+        pCur->pPage: pointer to current page the cursor is at.
+            -> BtCursor.page
+
+        pCur->apPage MemPage *apPage[BTCURSOR_MAX_DEPTH-1]: an array of pointers to MemPage,
+        stack of parents of current page.
+            -> BtCursor.page_stack
+
+        pCur->iPage i8: index/ depth of current page in apPage
+            -> BtCursor.index_current_page
+
          */
+
+        // update cursor state
+        // Keeping 2 commented lines below as later we might want to use array for these stacks.
+        // Currently not sure if these stacks index needs to map to exact Btree level.
+        // For example, if moving from table root page to a child in level 4 directly,
+        // do we need to save the page to index 3 of stack or just appending to stack is enought?
+        // self.cell_index_stack[self.index_current_page as usize] = self.index_current_cell;
+        // self.page_stack[self.index_current_page as usize] = self.page.clone();
+
+        // currently just append to the stacks. see above for more details.
+        self.cell_index_stack.push(self.index_current_cell);
+        self.page_stack.push(self.page.clone());
+        self.index_current_cell = 0;
+        self.index_current_page += 1;
+
+        // calling BufferPool to get the page and save the ref to BtCursor state
+        let child_page_id = PageId::new(child_page_no);
+        let mut db_ref = self.database.borrow_mut();
+        let page = db_ref.buffer_pool.get_page(child_page_id);
+        self.page = page;
+
+        // TODO child page integrity check
+
         Ok(())
     }
 
@@ -262,6 +312,8 @@ mod tests {
 
     use super::*;
 
+    const TABLE_SUPERHEROES_ROOT_PAGE: u32 = 2;
+
     fn db_ref() -> Rc<RefCell<Database>> {
         // superheroes.db has table spanning > 1 page
         let db_path =
@@ -295,6 +347,19 @@ mod tests {
         assert_eq!(cursor.root_page_number, 2);
         cursor.move_to_last().unwrap();
         assert_eq!(cursor.root_page_number, 2);
+    }
+
+    #[test]
+    fn test_move_to_child_ok() {
+        let mut cursor = BtCursor::new(db_ref().clone(), TABLE_SUPERHEROES_ROOT_PAGE);
+
+        cursor.move_to_child(3).unwrap();
+        assert_eq!(cursor.root_page_number, TABLE_SUPERHEROES_ROOT_PAGE);
+        assert_eq!(cursor.page.borrow().is_interior(), true);
+        print!("{:?}", cursor.page.borrow());
+
+        cursor.move_to_child(5).unwrap();
+        print!("{:?}", cursor.page.borrow());
     }
 
     #[test]
