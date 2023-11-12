@@ -25,6 +25,16 @@ Mapping equivalent components this implementation -> SQLite:
 
 ## What SQLite does
 
+What is its client/ caller?
+- VM module in SQLite ~= Physical Execution module in this repo.
+
+
+Requirements for this module
+- provide API to `cluster and organize tuples (entry)` of a relation and separate them from those of other relations.
+- provide API to `store, retrieve, manipulate tuples` efficiently.
+- do the `translation of tuples to pages`.
+
+
 Control data structures
 - 1 Btree --> 1 db file (not a single B- or B+ tree)
 - 1 BtreeCursor --> a specific tree identified by its root page (a table, index, etc.)
