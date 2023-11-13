@@ -355,11 +355,15 @@ mod tests {
 
         cursor.move_to_child(3).unwrap();
         assert_eq!(cursor.root_page_number, TABLE_SUPERHEROES_ROOT_PAGE);
-        assert_eq!(cursor.page.borrow().is_interior(), true);
-        print!("{:?}", cursor.page.borrow());
+        assert_eq!(cursor.page.borrow().is_leaf(), true);
+        assert_eq!(cursor.page.borrow().page_id.page_number, 3);
+        println!("{:?}", cursor.page.borrow());
 
         cursor.move_to_child(5).unwrap();
-        print!("{:?}", cursor.page.borrow());
+        assert_eq!(cursor.root_page_number, TABLE_SUPERHEROES_ROOT_PAGE);
+        assert_eq!(cursor.page.borrow().is_leaf(), true);
+        assert_eq!(cursor.page.borrow().page_id.page_number, 5);
+        println!("{:?}", cursor.page.borrow());
     }
 
     #[test]
