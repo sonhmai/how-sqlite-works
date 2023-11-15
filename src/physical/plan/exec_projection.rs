@@ -14,10 +14,10 @@ use crate::physical::plan::exec::Exec;
 /// SELECT without FROM will only evaluate expressions.
 #[derive(Debug)]
 pub struct ExecProjection {
-    // Physical plan input into this Exec for example
-    // SourceScan, CsvScan, SqliteTableScan, etc.
+    /// Physical plan input into this Exec for example
+    /// SourceScan, CsvScan, SqliteTableScan, etc.
     pub(crate) input: Box<dyn Exec>,
-    // expressions to be projected on the returned row
+    /// expressions to be projected on the returned row
     pub(crate) expressions: Vec<Box<dyn PhysicalExpr>>,
 }
 
