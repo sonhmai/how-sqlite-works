@@ -12,6 +12,7 @@ use crate::physical::expression::physical_expr::PhysicalExpr;
 use crate::physical::plan::exec::Exec;
 use crate::physical::plan::exec_apples_scan::ExecApplesScan;
 use crate::physical::plan::exec_dummy::ExecDummy;
+use crate::physical::plan::exec_join_hash::ExecJoinHash;
 use crate::physical::plan::exec_projection::ExecProjection;
 use crate::physical::plan::exec_scan::ExecScan;
 
@@ -40,6 +41,7 @@ impl PhysicalPlanner {
                 );
                 // TODO root page number should not be hardcoded but looked up in db meta
                 let table_page_number = 2; // hard-coded for sample.db, table apples
+
                 Box::new(ExecScan::new(
                     table_scan.table_name.to_string(),
                     table_page_number,
@@ -55,11 +57,23 @@ impl PhysicalPlanner {
                         create_physical_expr(&logical_expr, logical_plan.inputs()[0],
                         ).expect("cannot parse physical expr"))
                     .collect();
+                // * to defer the smart ptr input: Arc<datafusion LogicalPlan>,
+                // then take a reference with &
+                let input_physical_plan = self.plan(&*logical_proj.input);
+
                 Box::new(ExecProjection {
-                    input: Box::new(ExecApplesScan {}),
+                    input: input_physical_plan,
                     expressions: physical_expressions,
                 })
             }
+
+            LogicalPlan::Join(join) => {
+                let left_physical = self.plan(&join.left);
+                let right_physical = self.plan(&join.right);
+
+                todo!()
+            }
+
             _ => {
                 error!("error executing plan {logical_plan:#?}");
                 // TODO make return type Result with error
