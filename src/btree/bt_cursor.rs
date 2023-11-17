@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::access::buffer_pool::BufferPool;
 use anyhow::{bail, Result};
 
 use crate::model::cell_table_leaf::LeafTableCell;
@@ -12,7 +11,6 @@ use crate::model::page_id::PageId;
 // reference to a page in memory which is managed by BufferPool
 type PageRef = Rc<RefCell<Page>>;
 
-#[derive(Debug)]
 pub struct BtCursor {
     /// Rc for multiple references to same object
     /// RefCell allows mutable borrowing because we would want to modify contained obj
@@ -40,6 +38,20 @@ pub struct BtCursor {
     /// `&cell_index_stack[1]` is the cell index of page at level 1 in page_stack `&page_stack[1]`
     /// that the cursor is/ was accessing.
     cell_index_stack: Vec<u16>,
+}
+
+/// Not including some not-needed fields in Debug str (database, page, etc.)
+/// to avoid distraction debug info.
+impl std::fmt::Debug for BtCursor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BtCursor")
+            .field("root_page_number", &self.root_page_number)
+            .field("index_current_cell", &self.index_current_cell)
+            .field("index_current_page", &self.index_current_page)
+            .field("page_stack", &self.page_stack)
+            .field("cell_index_stack", &self.cell_index_stack)
+            .finish()
+    }
 }
 
 impl BtCursor {
@@ -310,11 +322,22 @@ mod tests {
     use std::path::PathBuf;
     use std::rc::Rc;
 
+    use log::info;
+
     use super::*;
 
     const TABLE_SUPERHEROES_ROOT_PAGE: u32 = 2;
 
-    fn db_ref() -> Rc<RefCell<Database>> {
+    fn db_ref_sample() -> Rc<RefCell<Database>> {
+        // sample.db has 2 tables: apples and oranges. Each one in 1 leaf page.
+        let db_path =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
+        let db = Database::new(db_path.as_path().to_str().unwrap()).unwrap();
+        let db_ref = Rc::new(RefCell::new(db));
+        db_ref
+    }
+
+    fn db_ref_superheroes() -> Rc<RefCell<Database>> {
         // superheroes.db has table spanning > 1 page
         let db_path =
             PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/superheroes.db");
@@ -325,7 +348,7 @@ mod tests {
 
     #[test]
     fn test_scan() {
-        let mut cursor = BtCursor::new(db_ref().clone(), 2);
+        let mut cursor = BtCursor::new(db_ref_superheroes().clone(), 2);
 
         assert_eq!(cursor.root_page_number, 2);
 
@@ -339,11 +362,11 @@ mod tests {
     #[test]
     fn test_move_to_root() {
         // should has no problem if cursor already pointed to root page
-        let mut cursor = BtCursor::new(db_ref().clone(), 0);
+        let mut cursor = BtCursor::new(db_ref_superheroes().clone(), 0);
         assert_eq!(cursor.root_page_number, 0);
 
         // should work when cursor moved away from root page
-        let mut cursor = BtCursor::new(db_ref().clone(), 2);
+        let mut cursor = BtCursor::new(db_ref_superheroes().clone(), 2);
         assert_eq!(cursor.root_page_number, 2);
         cursor.move_to_last().unwrap();
         assert_eq!(cursor.root_page_number, 2);
@@ -351,7 +374,7 @@ mod tests {
 
     #[test]
     fn test_move_to_child_ok() {
-        let mut cursor = BtCursor::new(db_ref().clone(), TABLE_SUPERHEROES_ROOT_PAGE);
+        let mut cursor = BtCursor::new(db_ref_superheroes().clone(), TABLE_SUPERHEROES_ROOT_PAGE);
 
         cursor.move_to_child(3).unwrap();
         assert_eq!(cursor.root_page_number, TABLE_SUPERHEROES_ROOT_PAGE);
@@ -366,8 +389,61 @@ mod tests {
         println!("{:?}", cursor.page.borrow());
     }
 
+    fn assert_cell_byte_offset(cursor: &BtCursor, expected_offset: usize) {
+        let mut page = cursor.page.borrow_mut();
+        let cell_byte_offset = page.get_cell_ptr(cursor.index_current_cell as usize);
+        assert_eq!(cell_byte_offset, expected_offset);
+        println!("{cursor:#?}")
+    }
+
+    fn assert_cursor_points_to_leaf_page(cursor: &BtCursor) {
+        assert_eq!(cursor.page.borrow().is_leaf(), true);
+    }
+
     #[test]
-    fn test_move_to_next() {}
+    fn test_move_to_next_table_single_page() {
+        let table_apples_root_page = 2;
+        let mut cursor = BtCursor::new(db_ref_sample().clone(), table_apples_root_page);
+
+        /*
+        To parse cell content from cursor
+        1. Get Page that cursor is pointing to.
+        2. Find pointer to the cell from index_current_cell (0, 1, etc.) and Page
+        using Page.get_cell_ptr fn.
+        3. Parse cell content from cell byte offset and page bytes.
+         */
+
+        // table apples has 4 cells [4067, 4054, 4029, 4001]
+        // first cell
+        assert_eq!(cursor.page.borrow().page_id.page_number, 2);
+        assert_eq!(cursor.index_current_cell, 0);
+        assert_cell_byte_offset(&cursor, 4067);
+
+        // second cell
+        cursor.move_to_next().unwrap();
+        assert_cursor_points_to_leaf_page(&cursor);
+        assert_eq!(cursor.page.borrow().page_id.page_number, 2);
+        assert_eq!(cursor.index_current_cell, 1);
+        assert_cell_byte_offset(&cursor, 4054);
+
+        // third cell
+        cursor.move_to_next().unwrap();
+        assert_cursor_points_to_leaf_page(&cursor);
+        assert_eq!(cursor.page.borrow().page_id.page_number, 2);
+        assert_eq!(cursor.index_current_cell, 2);
+        assert_cell_byte_offset(&cursor, 4029);
+
+        // forth cell
+        cursor.move_to_next().unwrap();
+        assert_cursor_points_to_leaf_page(&cursor);
+        assert_eq!(cursor.page.borrow().page_id.page_number, 2);
+        assert_eq!(cursor.index_current_cell, 3);
+        assert_cell_byte_offset(&cursor, 4001);
+
+        // moving past the last entry should be an error
+        assert!(cursor.move_to_next().is_err());
+        
+    }
 
     #[test]
     fn test_move_to_previous() {}
