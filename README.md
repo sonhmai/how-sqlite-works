@@ -32,11 +32,6 @@ tests # integration tests and test resources
 
 
 ```
-# run tests
-cargo test
-# showing warnings and stdout
-cargo test -- --nocapture
-
 # execute program against a sqlite database
 # this table has 4 rows
 cargo run -- sql tests/resources/sample.db "select name from apples"
@@ -54,6 +49,17 @@ export RUST_LOG=debug
 sqlite3 sample.db "select * from apples"
 RUST_LOG=debug sqlite3 sample.db "select * from apples"  # this also works
 ```
+
+Testing
+```
+# run tests
+cargo test
+# showing warnings and stdout
+cargo test -- --nocapture
+# run all tests with prefix test_move_to_right and show print output
+cargo test move_to_right -- --nocapture
+```
+
 
 Sample.db schema
 - apples: id integer primary key, name text, color text

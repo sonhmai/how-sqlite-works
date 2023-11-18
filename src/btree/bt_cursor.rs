@@ -244,6 +244,16 @@ impl BtCursor {
     /// The right-most entry is the one with the largest key -
     /// the last key in ascending order.
     fn move_to_right_most_leaf_entry(&mut self) -> Result<()> {
+        // case 1: cursor is at interior page
+        //  -> loop to move cursor to child page until reaching leaf page
+        
+
+        // case 2: cursor is at leaf page (no page beneath) 
+        //  -> set cursor index to last cell index in current leaf page
+        // cell index in SQlite in 0-indexed -> minus 1
+        let last_cell_index = self.page.borrow().get_number_of_cells() - 1;
+        self.index_current_cell = last_cell_index;
+
         Ok(())
     }
 
@@ -322,11 +332,10 @@ mod tests {
     use std::path::PathBuf;
     use std::rc::Rc;
 
-    use log::info;
-
     use super::*;
 
     const TABLE_SUPERHEROES_ROOT_PAGE: u32 = 2;
+    const TABLE_APPLES_ROOT_PAGE: u32 = 2;
 
     fn db_ref_sample() -> Rc<RefCell<Database>> {
         // sample.db has 2 tables: apples and oranges. Each one in 1 leaf page.
@@ -446,6 +455,11 @@ mod tests {
     }
 
     #[test]
+    fn test_move_to_next_table_2_pages() {
+
+    }
+
+    #[test]
     fn test_move_to_previous() {}
 
     #[test]
@@ -453,4 +467,15 @@ mod tests {
 
     #[test]
     fn test_move_to_first() {}
+
+    #[test]
+    fn test_move_to_right_most_table_single_page() {
+        let mut cursor = BtCursor::new(db_ref_sample().clone(), TABLE_APPLES_ROOT_PAGE);
+        cursor.move_to_right_most_leaf_entry().unwrap();
+
+        // Check if cursor is at the right-most leaf entry
+        assert_eq!(cursor.page.borrow().page_id.page_number, 2);
+        // table apples has 4 entries = 4 cells -> last cell index is 3 (0-indexed)
+        assert_eq!(cursor.index_current_cell, 3);
+    }
 }
