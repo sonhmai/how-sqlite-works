@@ -1,3 +1,5 @@
+use std::fmt::{Display, Debug};
+
 use anyhow::Result;
 use log::debug;
 
@@ -15,12 +17,21 @@ use crate::model::page_id::PageId;
 /// The first page is a special one because is has extra 100-byte
 /// for the db header. So we need to aware whether it it is the first
 /// db page or not to account for that.
-#[derive(Debug)]
 pub struct Page {
     pub page_header: PageHeader,
     pub page_id: PageId,
     pub data: Vec<u8>,             // bytes of the page
     cell_ptrs: Option<Vec<usize>>, // pointers to data cell of this page
+}
+
+impl Debug for Page {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Page")
+            .field("page_header", &self.page_header)
+            .field("page_id", &self.page_id)
+            .field("cell_ptrs", &self.cell_ptrs)
+            .finish()
+    }
 }
 
 impl Page {
