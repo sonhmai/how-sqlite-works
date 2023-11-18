@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use anyhow::{bail, Result};
+use log::{debug, info};
 
 use crate::model::cell_table_leaf::LeafTableCell;
 use crate::model::database::Database;
@@ -246,9 +247,30 @@ impl BtCursor {
     fn move_to_right_most_leaf_entry(&mut self) -> Result<()> {
         // case 1: cursor is at interior page
         //  -> loop to move cursor to child page until reaching leaf page
-        
+        while self.page.borrow().is_interior() {
+            // get page number of rightmost child page of current interior page.
+            // Knowing this is an interior page, the option is not none, just unwrap.
+            let right_child_page_no = self
+                .page
+                .borrow()
+                .page_header
+                .right_child_page_number
+                .unwrap();
+            info!(
+                "Page {}, right child page num {right_child_page_no}",
+                self.index_current_page
+            );
+            // Set index to one past last valid cell index in page to indicate that
+            // cursor has visited all cells on the current page.
+            // Also, this cell index in current page will be saved in move_to_child
+            // cell_index_stack[index_current_page] = index_current_cell
+            //                      parent              saving this cell index in parent
+            // so that when cursor comes back to this page, it knows where it was last time.
+            self.index_current_cell = self.page.borrow().get_number_of_cells();
+            self.move_to_child(right_child_page_no)?;
+        }
 
-        // case 2: cursor is at leaf page (no page beneath) 
+        // case 2: cursor is at leaf page (no page beneath)
         //  -> set cursor index to last cell index in current leaf page
         // cell index in SQlite in 0-indexed -> minus 1
         let last_cell_index = self.page.borrow().get_number_of_cells() - 1;
@@ -332,6 +354,8 @@ mod tests {
     use std::path::PathBuf;
     use std::rc::Rc;
 
+    use crate::test_utils::setup;
+
     use super::*;
 
     const TABLE_SUPERHEROES_ROOT_PAGE: u32 = 2;
@@ -339,8 +363,7 @@ mod tests {
 
     fn db_ref_sample() -> Rc<RefCell<Database>> {
         // sample.db has 2 tables: apples and oranges. Each one in 1 leaf page.
-        let db_path =
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
+        let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
         let db = Database::new(db_path.as_path().to_str().unwrap()).unwrap();
         let db_ref = Rc::new(RefCell::new(db));
         db_ref
@@ -451,13 +474,10 @@ mod tests {
 
         // moving past the last entry should be an error
         assert!(cursor.move_to_next().is_err());
-        
     }
 
     #[test]
-    fn test_move_to_next_table_2_pages() {
-
-    }
+    fn test_move_to_next_table_2_pages() {}
 
     #[test]
     fn test_move_to_previous() {}
@@ -477,5 +497,22 @@ mod tests {
         assert_eq!(cursor.page.borrow().page_id.page_number, 2);
         // table apples has 4 entries = 4 cells -> last cell index is 3 (0-indexed)
         assert_eq!(cursor.index_current_cell, 3);
+    }
+
+    #[test]
+    fn test_move_to_right_most_table_many_pages() {
+        setup();
+        let mut cursor = BtCursor::new(db_ref_superheroes().clone(), TABLE_SUPERHEROES_ROOT_PAGE);
+
+        assert_eq!(cursor.page.borrow().page_id.page_number, 2);
+        assert!(cursor.page.borrow().is_interior());
+        assert_eq!(cursor.index_current_cell, 0);
+
+        cursor.move_to_right_most_leaf_entry().unwrap();
+        // rightmost leaf page number of table superherous is 232
+        assert_eq!(cursor.page.borrow().page_id.page_number, 232);
+        assert!(cursor.page.borrow().is_leaf());
+        // rightmost leaf page has xxx cells -> index  (0-indexed)
+        assert_eq!(cursor.index_current_cell, 48);
     }
 }
