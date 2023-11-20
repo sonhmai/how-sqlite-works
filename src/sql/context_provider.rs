@@ -55,7 +55,7 @@ impl SqliteContextProvider {
 impl ContextProvider for SqliteContextProvider {
     fn get_table_provider(&self, name: TableReference) -> Result<Arc<dyn TableSource>> {
         match self.tables.get(name.table()) {
-            Some(tableSource) => Ok(tableSource.clone()),
+            Some(table_source) => Ok(table_source.clone()),
             _ => plan_err!("Table not found: {}", name.table()),
         }
     }
