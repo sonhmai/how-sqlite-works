@@ -44,4 +44,8 @@ impl Exec for ExecScan {
 
         records
     }
+    
+    fn schema(&self) -> arrow_schema::SchemaRef {
+        todo!()
+    }
 }

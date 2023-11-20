@@ -8,4 +8,8 @@ impl Exec for ExecDummy {
     fn execute(&mut self) -> Vec<DataRecord> {
         todo!()
     }
+    
+    fn schema(&self) -> arrow_schema::SchemaRef {
+        todo!()
+    }
 }

@@ -47,4 +47,8 @@ impl Exec for ExecProjection {
             .map(|record| self.project(&record))
             .collect()
     }
+    
+    fn schema(&self) -> arrow_schema::SchemaRef {
+        todo!()
+    }
 }
