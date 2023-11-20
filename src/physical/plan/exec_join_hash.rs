@@ -25,4 +25,8 @@ impl Exec for ExecJoinHash {
     fn execute(&mut self) -> Vec<DataRecord> {
         todo!()
     }
+    
+    fn schema(&self) -> arrow_schema::SchemaRef {
+        todo!()
+    }
 }

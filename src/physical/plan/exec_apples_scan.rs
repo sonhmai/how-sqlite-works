@@ -45,4 +45,8 @@ impl Exec for ExecApplesScan {
             },
         ]
     }
+
+    fn schema(&self) -> arrow_schema::SchemaRef {
+        todo!()
+    }
 }
