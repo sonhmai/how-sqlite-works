@@ -53,6 +53,13 @@ impl SqliteContextProvider {
 }
 
 impl ContextProvider for SqliteContextProvider {
+    fn get_table_source(
+        &self,
+        _: TableReference<'_>,
+    ) -> Result<Arc<(dyn TableSource + 'static)>, DataFusionError> {
+        todo!()
+    }
+
     fn get_table_provider(&self, name: TableReference) -> Result<Arc<dyn TableSource>> {
         match self.tables.get(name.table()) {
             Some(table_source) => Ok(table_source.clone()),
