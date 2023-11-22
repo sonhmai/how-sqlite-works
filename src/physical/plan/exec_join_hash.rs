@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
-use anyhow::{Ok, Result};
+use anyhow::{Ok, Result, bail};
 use arrow_schema::SchemaRef;
 use datafusion_common::JoinType;
-use datafusion_physical_plan::joins::utils::build_join_schema;
+use datafusion_physical_plan::joins::utils::{build_join_schema, JoinOn};
+use datafusion_physical_plan::expressions::Column;
 
 use crate::model::data_record::DataRecord;
 use crate::physical::expression::physical_expr::PhysicalExpr;
@@ -16,8 +17,8 @@ pub struct ExecJoinHash {
     pub left: Arc<dyn Exec>,
     /// right (probe) side which are filtered by hash table
     pub right: Arc<dyn Exec>,
-    // Set of equijoin columns from the relations: (left_col, right_col)
-    // pub on: Vec<(Column, Column)>,
+    /// Set of equijoin columns from the relations: (left_col, right_col)
+    pub on: Vec<(Column, Column)>,
     /// the type of join: OUTER, INNER, etc.
     pub join_type: JoinType,
 
@@ -50,8 +51,14 @@ impl ExecJoinHash {
     pub fn try_new(
         left: Arc<dyn Exec>, 
         right: Arc<dyn Exec>,
+        on: JoinOn,
         join_type: &JoinType, // using reference as we read only
     ) -> Result<Self> {
+
+        if on.is_empty() {
+            bail!("On constraints in ExecJoinHash should be non-empty")
+        }
+
         let left_schema = left.schema();
         let right_schema = right.schema();
         let (schema, column_indices) = 
@@ -60,6 +67,7 @@ impl ExecJoinHash {
         Ok(ExecJoinHash {
             left,
             right,
+            on,
             // dereferences the join_type reference (*join_type) to copy value into struct
             join_type: *join_type,
             schema: Arc::new(schema),
@@ -74,5 +82,19 @@ impl Exec for ExecJoinHash {
 
     fn schema(&self) -> SchemaRef {
         self.schema.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn build_table() -> Arc<dyn Exec> {
+        todo!()
+    }
+
+    #[test]
+    fn test_join_on_1_column_pair() {
+
     }
 }
