@@ -19,3 +19,4 @@ Cargo.lock
 /target
 /.idea
 local_workspace/
+/.vscode

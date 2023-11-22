@@ -3,4 +3,5 @@ pub mod exec_apples_scan;
 pub mod exec_dummy;
 pub mod exec_projection;
 pub mod exec_scan;
-pub mod exec_join_hash;
+pub mod join;
+pub mod memory;
