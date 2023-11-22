@@ -4,3 +4,4 @@ pub mod exec_dummy;
 pub mod exec_projection;
 pub mod exec_scan;
 pub mod join;
+pub mod memory;
