@@ -12,7 +12,7 @@ use crate::physical::expression::physical_expr::PhysicalExpr;
 use crate::physical::plan::exec::Exec;
 use crate::physical::plan::exec_apples_scan::ExecApplesScan;
 use crate::physical::plan::exec_dummy::ExecDummy;
-use crate::physical::plan::exec_join_hash::ExecJoinHash;
+use crate::physical::plan::join::ExecJoinHash;
 use crate::physical::plan::exec_projection::ExecProjection;
 use crate::physical::plan::exec_scan::ExecScan;
 
