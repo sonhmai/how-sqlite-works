@@ -5,7 +5,7 @@ use crate::physical::plan::exec::Exec;
 pub struct ExecDummy {}
 
 impl Exec for ExecDummy {
-    fn execute(&mut self) -> Vec<DataRecord> {
+    fn execute(&mut self) -> &[DataRecord] {
         todo!()
     }
     

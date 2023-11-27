@@ -6,11 +6,13 @@ use crate::physical::plan::exec::Exec;
 /// A hard-coded scan physical operator for testing
 /// TODO remove this after implementing proper sqlite Table scan
 #[derive(Debug)]
-pub struct ExecApplesScan {}
+pub struct ExecApplesScan {
+    pub records: Vec<DataRecord>,
+}
 
 impl Exec for ExecApplesScan {
-    fn execute(&mut self) -> Vec<DataRecord> {
-        vec![
+    fn execute(&mut self) -> &[DataRecord] {
+        self.records = vec![
             DataRecord {
                 values: vec![
                     ColumnValue::int32(1),
@@ -43,7 +45,9 @@ impl Exec for ExecApplesScan {
                 ],
                 rowid: Some(4),
             },
-        ]
+        ];
+
+        &&self.records
     }
 
     fn schema(&self) -> arrow_schema::SchemaRef {

@@ -36,7 +36,7 @@ impl ExecJoinNestedLoop {
 }
 
 impl Exec for ExecJoinNestedLoop {
-    fn execute(&mut self) -> Vec<DataRecord> {
+    fn execute(&mut self) -> &[DataRecord] {
         todo!()
     }
 

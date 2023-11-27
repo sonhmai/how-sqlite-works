@@ -76,7 +76,7 @@ impl ExecJoinHash {
 }
 
 impl Exec for ExecJoinHash {
-    fn execute(&mut self) -> Vec<DataRecord> {
+    fn execute(&mut self) -> &[DataRecord] {
         todo!()
     }
 
