@@ -24,7 +24,6 @@ DataFusion logical plan
         TableScan: apples
         TableScan: oranges
 */
-#[ignore]
 #[test]
 fn cli_sql_inner_join_two_tables() {
     Command::cargo_bin("rsql")

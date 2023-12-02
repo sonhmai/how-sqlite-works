@@ -11,10 +11,9 @@ use crate::physical::expression::col_by_index::PhysicalColByIndex;
 use crate::physical::expression::literal::PhysicalLiteral;
 use crate::physical::expression::physical_expr::PhysicalExpr;
 use crate::physical::plan::exec::Exec;
-use crate::physical::plan::exec_apples_scan::ExecApplesScan;
 use crate::physical::plan::exec_dummy::ExecDummy;
 use crate::physical::plan::exec_projection::ExecProjection;
-use crate::physical::plan::exec_scan::ExecScan;
+use crate::physical::plan::scan::ExecScan;
 use crate::physical::plan::join::ExecJoinHash;
 
 pub struct PhysicalPlanner {
@@ -66,10 +65,21 @@ impl PhysicalPlanner {
             }
 
             LogicalPlan::Join(join) => {
+                // receiving logical plan, based on different criteria the most appropriate
+                // physical plan will be produced.
                 let left_physical = self.plan(&join.left);
                 let right_physical = self.plan(&join.right);
+                error!("Join on {:?}", join.on);
+                let join_on_physical = vec![];
 
-                todo!()
+                Arc::new(
+                    ExecJoinHash::try_new(
+                        left_physical,
+                        right_physical,
+                        join_on_physical,
+                        &join.join_type
+                    ).unwrap()
+                )
             }
 
             _ => {
