@@ -12,6 +12,7 @@ pub struct ExecScan {
     pub table_page_number: u32,
     pub database: Rc<RefCell<Database>>,
     bt_cursor: BtCursor,
+    records: Vec<DataRecord>,
 }
 
 impl ExecScan {
@@ -26,12 +27,13 @@ impl ExecScan {
             table_page_number,
             database,
             bt_cursor,
+            records: vec![],
         }
     }
 }
 
 impl Exec for ExecScan {
-    fn execute(&mut self) -> Vec<DataRecord> {
+    fn execute(&mut self) -> &[DataRecord] {
         let mut records = Vec::new();
 
         while self.bt_cursor.move_to_next().is_ok() {
@@ -41,8 +43,9 @@ impl Exec for ExecScan {
 
             records.push(record);
         }
-
-        records
+        
+        self.records = records;
+        &self.records
     }
     
     fn schema(&self) -> arrow_schema::SchemaRef {

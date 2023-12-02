@@ -5,6 +5,7 @@ use datafusion_sql::sqlparser::dialect::AnsiDialect;
 use datafusion_sql::sqlparser::parser::Parser;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use log::info;
 use rsql::model::database::Database;
@@ -46,11 +47,13 @@ fn main() {
             let physical_planner = PhysicalPlanner {
                 database: db_ref.clone(),
             };
-            let mut exec = physical_planner.plan(&logical_plan);
+            let mut ref_plan = physical_planner.plan(&logical_plan);
+            // get a mutable ref to execute Exec, need to be sure no other refs to Arc
+            let exec = Arc::get_mut(&mut ref_plan).unwrap();
             info!("Physical plan: {exec:?}");
             let records = exec.execute();
             info!("Returned records: {records:?}");
-            presentation::sqlite_show(&records);
+            presentation::sqlite_show(records);
         }
         _ => unreachable!(),
     }
