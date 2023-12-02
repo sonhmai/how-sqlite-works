@@ -11,10 +11,9 @@ use crate::physical::expression::col_by_index::PhysicalColByIndex;
 use crate::physical::expression::literal::PhysicalLiteral;
 use crate::physical::expression::physical_expr::PhysicalExpr;
 use crate::physical::plan::exec::Exec;
-use crate::physical::plan::exec_apples_scan::ExecApplesScan;
 use crate::physical::plan::exec_dummy::ExecDummy;
 use crate::physical::plan::exec_projection::ExecProjection;
-use crate::physical::plan::exec_scan::ExecScan;
+use crate::physical::plan::scan::ExecScan;
 use crate::physical::plan::join::ExecJoinHash;
 
 pub struct PhysicalPlanner {
