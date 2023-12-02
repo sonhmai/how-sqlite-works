@@ -6,7 +6,10 @@ use std::fmt::Debug;
 /// Represent node in Physical Plan Tree
 pub trait Exec: Debug {
     // TODO use Iterator?
-    /// Returns a slide to provide a read view without ownership
+    /// Returns a slide to provide a read view without ownership.
+    /// 
+    /// execute can modify self, hence &mut. For example, recording 
+    /// metrics in executing, changing self state.
     fn execute(&mut self) -> &[DataRecord];
 
     // Get the schema for this Physical Plan. Currenyly using arrow Schema.
