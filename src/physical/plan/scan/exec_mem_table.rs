@@ -12,7 +12,7 @@ pub struct ExecMemTable {
 }
 
 impl ExecMemTable {
-    fn try_new() -> Result<Self> {
+    pub fn new(records: &Vec<DataRecord>, schema_ref: SchemaRef) -> Self {
         todo!()
     }
 }

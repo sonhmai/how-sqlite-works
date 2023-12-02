@@ -65,10 +65,21 @@ impl PhysicalPlanner {
             }
 
             LogicalPlan::Join(join) => {
+                // receiving logical plan, based on different criteria the most appropriate
+                // physical plan will be produced.
                 let left_physical = self.plan(&join.left);
                 let right_physical = self.plan(&join.right);
+                error!("Join on {:?}", join.on);
+                let join_on_physical = vec![];
 
-                todo!()
+                Arc::new(
+                    ExecJoinHash::try_new(
+                        left_physical,
+                        right_physical,
+                        join_on_physical,
+                        &join.join_type
+                    ).unwrap()
+                )
             }
 
             _ => {

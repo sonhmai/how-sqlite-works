@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use anyhow::{Ok, Result, bail};
+use anyhow::{bail, Ok, Result};
 use arrow_schema::SchemaRef;
 use datafusion_common::JoinType;
-use datafusion_physical_plan::joins::utils::{build_join_schema, JoinOn};
 use datafusion_physical_plan::expressions::Column;
+use datafusion_physical_plan::joins::utils::{build_join_schema, JoinOn};
 
 use crate::model::data_record::DataRecord;
 use crate::physical::expression::physical_expr::PhysicalExpr;
@@ -30,17 +30,16 @@ pub struct ExecJoinHash {
 }
 
 impl ExecJoinHash {
-
-    /// try_new takes a reference to a JoinType (&JoinType) instead of 
+    /// try_new takes a reference to a JoinType (&JoinType) instead of
     /// taking ownership of it (JoinType) for a couple of reasons:
-    /// 
-    /// 1. Efficiency: Taking a reference is more efficient than taking ownership 
-    /// if the function does not need to consume or modify the value. 
+    ///
+    /// 1. Efficiency: Taking a reference is more efficient than taking ownership
+    /// if the function does not need to consume or modify the value.
     /// This is because taking a reference does not involve copying or moving the value.
-    /// 
-    /// 2. Flexibility: By taking a reference, the try_new function allows the caller 
+    ///
+    /// 2. Flexibility: By taking a reference, the try_new function allows the caller
     /// to continue using the JoinType value after the call.
-    /// 
+    ///
     /// Then why used ownership (JoinType) in the struct?
     ///     1. Lifetime: if reference is used, lifetime of join_type must be ensured
     ///     to be dropped not before the struct.
@@ -49,20 +48,18 @@ impl ExecJoinHash {
     ///     3. Copying is cheap for JoinType enum -> simplify the code by not using
     ///     reference.
     pub fn try_new(
-        left: Arc<dyn Exec>, 
+        left: Arc<dyn Exec>,
         right: Arc<dyn Exec>,
         on: JoinOn,
         join_type: &JoinType, // using reference as we read only
     ) -> Result<Self> {
-
         if on.is_empty() {
             bail!("On constraints in ExecJoinHash should be non-empty")
         }
 
         let left_schema = left.schema();
         let right_schema = right.schema();
-        let (schema, column_indices) = 
-            build_join_schema(&left_schema, &right_schema, join_type);
+        let (schema, column_indices) = build_join_schema(&left_schema, &right_schema, join_type);
 
         Ok(ExecJoinHash {
             left,
@@ -87,14 +84,58 @@ impl Exec for ExecJoinHash {
 
 #[cfg(test)]
 mod tests {
+    use anyhow::Result;
+    use arrow_schema::{Schema, DataType, Field};
+    use log::info;
+
+    use crate::physical::plan::scan::ExecMemTable;
+
     use super::*;
 
-    fn build_table() -> Arc<dyn Exec> {
-        todo!()
+    fn build_table(
+        a: (&str, &Vec<i32>),
+        b: (&str, &Vec<i32>),
+        c: (&str, &Vec<i32>),
+    ) -> Arc<dyn Exec> {
+        let schema = Schema::new(vec![
+            Field::new(a.0, DataType::Int32, false),
+            Field::new(b.0, DataType::Int32, false),
+            Field::new(c.0, DataType::Int32, false),
+        ]);
+        let records = vec![];
+        
+        Arc::new(
+            ExecMemTable::new(&records, Arc::new(schema))
+        )
     }
 
     #[test]
-    fn test_join_on_1_column_pair() {
+    fn test_join_on_1_column_pair() -> Result<()> {
+        // joining left and right on a1 = a2
+        let left_physical = build_table(
+            ("a1", &vec![10, 1, 1]),
+            ("b1", &vec![20, 1, 1]),
+            ("c1", &vec![30, 1, 1]), // not matched in join
+        );
+        let right_physical = build_table(
+            ("a2", &vec![10, 2, 2]),
+            ("b2", &vec![20, 2, 2]),
+            ("c2", &vec![40, 2, 2]), // not matched in join
+        );
+        let on: Vec<(Column, Column)> = vec![(
+            Column::new_with_schema("a1", &left_physical.schema())?,
+            Column::new_with_schema("a2", &right_physical.schema())?,
+        )];
+        
+        let hash_join = ExecJoinHash::try_new(
+            left_physical, 
+            right_physical, 
+            on,
+            &JoinType::Inner
+        )?;
 
+        info!("{:?}", hash_join.schema());
+
+        Ok(())
     }
 }
