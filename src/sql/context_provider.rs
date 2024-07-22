@@ -67,19 +67,19 @@ impl ContextProvider for SqliteContextProvider {
         }
     }
 
-    fn get_function_meta(&self, name: &str) -> Option<Arc<ScalarUDF>> {
+    fn get_function_meta(&self, _name: &str) -> Option<Arc<ScalarUDF>> {
         None // we don't add any ScalarUDF
     }
 
-    fn get_aggregate_meta(&self, name: &str) -> Option<Arc<AggregateUDF>> {
+    fn get_aggregate_meta(&self, _name: &str) -> Option<Arc<AggregateUDF>> {
         None
     }
 
-    fn get_window_meta(&self, name: &str) -> Option<Arc<WindowUDF>> {
+    fn get_window_meta(&self, _name: &str) -> Option<Arc<WindowUDF>> {
         None
     }
 
-    fn get_variable_type(&self, variable_names: &[String]) -> Option<DataType> {
+    fn get_variable_type(&self, _variable_names: &[String]) -> Option<DataType> {
         None
     }
 

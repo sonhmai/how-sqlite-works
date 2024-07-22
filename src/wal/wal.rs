@@ -8,7 +8,6 @@ A single WAL can and usually does record multiple transactions.
 - a WAL file always grows from beginning to end -> sequential disk IO.
 - each frame has checksum for data integrity and counter for know whether it's checkpointed.
  */
-use std::io::{Read, Write};
 
 use anyhow::Result;
 
@@ -53,7 +52,7 @@ impl Wal {
         let mut frames: Vec<WalFrame> = vec![];
         let mut bytes_cursor = WalHeader::SIZE;
 
-        for i in 0..n_frames {
+        for _ in 0..n_frames {
             let wal_frame = WalFrame::from_bytes(
                 &bytes[bytes_cursor..bytes_cursor + frame_size],
                 header.page_size as usize,

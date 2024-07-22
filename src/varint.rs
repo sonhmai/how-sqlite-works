@@ -62,12 +62,12 @@ mod tests {
 
     #[test]
     fn read_nine_byte_varint() {
-        assert_eq!(decode_varint(&vec![0xff; 9]), (-1, 9));
+        assert_eq!(decode_varint(&[0xff; 9]), (-1, 9));
     }
 
     #[test]
     fn read_varint_from_longer_bytes() {
-        assert_eq!(decode_varint(&vec![0x01; 10]), (1, 1));
-        assert_eq!(decode_varint(&vec![0xff; 10]), (-1, 9));
+        assert_eq!(decode_varint(&[0x01; 10]), (1, 1));
+        assert_eq!(decode_varint(&[0xff; 10]), (-1, 9));
     }
 }

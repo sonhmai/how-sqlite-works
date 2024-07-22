@@ -6,16 +6,16 @@ use std::process::Command;
 
 CREATE TABLE apples
 (
-	id integer primary key autoincrement,
-	name text,
-	color text
+    id integer primary key autoincrement,
+    name text,
+    color text
 );
 CREATE TABLE sqlite_sequence(name,seq);
 CREATE TABLE oranges
 (
-	id integer primary key autoincrement,
-	name text,
-	description text
+    id integer primary key autoincrement,
+    name text,
+    description text
 );
 
 DataFusion logical plan
@@ -28,7 +28,7 @@ DataFusion logical plan
 fn cli_sql_inner_join_two_tables() {
     Command::cargo_bin("rsql")
         .unwrap()
-        .args(&[
+        .args([
             "sql",
             "tests/resources/sample.db",
             "select * from apples join oranges on apples.id=oranges.id;",

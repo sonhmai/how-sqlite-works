@@ -12,15 +12,15 @@ static INIT: Once = Once::new();
 pub fn file_bytes_vec(path_from_proj_root: &str) -> Vec<u8> {
     // CARGO_MANIFEST_DIR is project root /../rust-sqlite
     let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path_from_proj_root);
-    let data = fs::read(db_path).unwrap();
-    data
+
+    fs::read(db_path).unwrap()
 }
 
 pub fn db_bytes() -> Vec<u8> {
     // CARGO_MANIFEST_DIR is project root /../rust-sqlite
     let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
-    let data = fs::read(db_path).unwrap();
-    data
+
+    fs::read(db_path).unwrap()
 }
 
 pub fn ref_disk_manager() -> SharedDiskManager {

@@ -66,7 +66,7 @@ impl ColumnValue {
             9 => (ColumnValue::One, 0),
             n if n >= 12 && n % 2 == 0 => {
                 let len = ((n - 12) / 2).try_into()?;
-                (ColumnValue::Blob(stream[..len].try_into()?), len)
+                (ColumnValue::Blob(stream[..len].into()), len)
             }
             n if n >= 13 && n % 2 == 1 => {
                 let len = ((n - 13) / 2).try_into()?;

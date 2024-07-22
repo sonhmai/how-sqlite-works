@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use anyhow::{bail, Result};
-use log::{debug, info};
+use log::info;
 
 use crate::model::cell_table_leaf::LeafTableCell;
 use crate::model::database::Database;
@@ -99,11 +99,11 @@ impl BtCursor {
         self.index_current_cell = index_next_cell;
         // if page is an interior, we want to move to left most leaf
         // so that cursor can point to the next entry.
-        return if page.borrow().is_leaf() {
+        if page.borrow().is_leaf() {
             Ok(())
         } else {
             self.move_to_left_most_leaf_entry()
-        };
+        }
     }
 
     /// Move to the next entry in the next page in case the cursor
@@ -129,7 +129,7 @@ impl BtCursor {
          */
         self.index_current_cell += 1;
         let current_index = self.index_current_cell;
-        let mut page_rc = self.page_ref();
+        let page_rc = self.page_ref();
 
         let page = page_rc.borrow();
 
@@ -157,7 +157,7 @@ impl BtCursor {
     }
 
     fn get_child_page_num(&mut self) -> u32 {
-        let mut page_rc = self.page_ref();
+        let page_rc = self.page_ref();
         let current_cell_ptr = page_rc
             .borrow_mut() // TODO really need mut?
             .get_cell_ptr(self.index_current_cell as usize);
@@ -365,8 +365,7 @@ mod tests {
         // sample.db has 2 tables: apples and oranges. Each one in 1 leaf page.
         let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/sample.db");
         let db = Database::new(db_path.as_path().to_str().unwrap()).unwrap();
-        let db_ref = Rc::new(RefCell::new(db));
-        db_ref
+        Rc::new(RefCell::new(db))
     }
 
     fn db_ref_superheroes() -> Rc<RefCell<Database>> {
@@ -374,8 +373,7 @@ mod tests {
         let db_path =
             PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/resources/superheroes.db");
         let db = Database::new(db_path.as_path().to_str().unwrap()).unwrap();
-        let db_ref = Rc::new(RefCell::new(db));
-        db_ref
+        Rc::new(RefCell::new(db))
     }
 
     #[test]
@@ -394,7 +392,7 @@ mod tests {
     #[test]
     fn test_move_to_root() {
         // should has no problem if cursor already pointed to root page
-        let mut cursor = BtCursor::new(db_ref_superheroes().clone(), 0);
+        let cursor = BtCursor::new(db_ref_superheroes().clone(), 0);
         assert_eq!(cursor.root_page_number, 0);
 
         // should work when cursor moved away from root page
@@ -410,13 +408,13 @@ mod tests {
 
         cursor.move_to_child(3).unwrap();
         assert_eq!(cursor.root_page_number, TABLE_SUPERHEROES_ROOT_PAGE);
-        assert_eq!(cursor.page.borrow().is_leaf(), true);
+        assert!(cursor.page.borrow().is_leaf());
         assert_eq!(cursor.page.borrow().page_id.page_number, 3);
         println!("{:?}", cursor.page.borrow());
 
         cursor.move_to_child(5).unwrap();
         assert_eq!(cursor.root_page_number, TABLE_SUPERHEROES_ROOT_PAGE);
-        assert_eq!(cursor.page.borrow().is_leaf(), true);
+        assert!(cursor.page.borrow().is_leaf());
         assert_eq!(cursor.page.borrow().page_id.page_number, 5);
         println!("{:?}", cursor.page.borrow());
     }
@@ -429,7 +427,7 @@ mod tests {
     }
 
     fn assert_cursor_points_to_leaf_page(cursor: &BtCursor) {
-        assert_eq!(cursor.page.borrow().is_leaf(), true);
+        assert!(cursor.page.borrow().is_leaf());
     }
 
     #[test]

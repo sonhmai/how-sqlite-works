@@ -40,6 +40,21 @@ pub fn parse_columns_from_ddl(ddl: &str) -> Result<Vec<Field>> {
     }
 }
 
+fn main() {
+    let ddl = "CREATE TABLE my_table (id INT, name VARCHAR(50), age INT)";
+
+    match parse_columns_from_ddl(ddl) {
+        Ok(fields) => {
+            let schema = Schema::new(fields);
+            info!("Parsed columns and data types:");
+            for field in schema.fields() {
+                info!("{}: {:?}", field.name(), field.data_type());
+            }
+        }
+        Err(err) => error!("Error parsing DDL: {}", err),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -82,20 +97,5 @@ mod tests {
         let result = parse_columns_from_ddl(ddl);
 
         assert!(result.is_err());
-    }
-}
-
-fn main() {
-    let ddl = "CREATE TABLE my_table (id INT, name VARCHAR(50), age INT)";
-
-    match parse_columns_from_ddl(ddl) {
-        Ok(fields) => {
-            let schema = Schema::new(fields);
-            info!("Parsed columns and data types:");
-            for field in schema.fields() {
-                info!("{}: {:?}", field.name(), field.data_type());
-            }
-        }
-        Err(err) => error!("Error parsing DDL: {}", err),
     }
 }

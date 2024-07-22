@@ -7,7 +7,6 @@ use datafusion_physical_plan::expressions::Column;
 use datafusion_physical_plan::joins::utils::{build_join_schema, JoinOn};
 
 use crate::model::data_record::DataRecord;
-use crate::physical::expression::physical_expr::PhysicalExpr;
 use crate::physical::plan::exec::Exec;
 
 /// Hash Join Physical Plan for equi joins
@@ -59,7 +58,7 @@ impl ExecJoinHash {
 
         let left_schema = left.schema();
         let right_schema = right.schema();
-        let (schema, column_indices) = build_join_schema(&left_schema, &right_schema, join_type);
+        let (schema, _) = build_join_schema(&left_schema, &right_schema, join_type);
 
         Ok(ExecJoinHash {
             left,
@@ -85,7 +84,7 @@ impl Exec for ExecJoinHash {
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
-    use arrow_schema::{Schema, DataType, Field};
+    use arrow_schema::{DataType, Field, Schema};
     use log::info;
 
     use crate::physical::plan::scan::ExecMemTable;
@@ -103,10 +102,8 @@ mod tests {
             Field::new(c.0, DataType::Int32, false),
         ]);
         let records = vec![];
-        
-        Arc::new(
-            ExecMemTable::new(&records, Arc::new(schema))
-        )
+
+        Arc::new(ExecMemTable::new(&records, Arc::new(schema)))
     }
 
     #[test]
@@ -126,13 +123,8 @@ mod tests {
             Column::new_with_schema("a1", &left_physical.schema())?,
             Column::new_with_schema("a2", &right_physical.schema())?,
         )];
-        
-        let hash_join = ExecJoinHash::try_new(
-            left_physical, 
-            right_physical, 
-            on,
-            &JoinType::Inner
-        )?;
+
+        let hash_join = ExecJoinHash::try_new(left_physical, right_physical, on, &JoinType::Inner)?;
 
         info!("{:?}", hash_join.schema());
 

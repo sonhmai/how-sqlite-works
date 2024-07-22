@@ -47,7 +47,7 @@ impl Exec for ExecApplesScan {
             },
         ];
 
-        &&self.records
+        &self.records
     }
 
     fn schema(&self) -> arrow_schema::SchemaRef {

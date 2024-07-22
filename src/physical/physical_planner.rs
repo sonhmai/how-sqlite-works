@@ -13,8 +13,8 @@ use crate::physical::expression::physical_expr::PhysicalExpr;
 use crate::physical::plan::exec::Exec;
 use crate::physical::plan::exec_dummy::ExecDummy;
 use crate::physical::plan::exec_projection::ExecProjection;
-use crate::physical::plan::scan::ExecScan;
 use crate::physical::plan::join::ExecJoinHash;
+use crate::physical::plan::scan::ExecScan;
 
 pub struct PhysicalPlanner {
     pub database: Rc<RefCell<Database>>,
@@ -42,6 +42,8 @@ impl PhysicalPlanner {
                 // TODO root page number should not be hardcoded but looked up in db meta
                 let table_page_number = 2; // hard-coded for sample.db, table apples
 
+                // TODO: Use Arc without send/sync is usually wrong, please double check here.
+                #[allow(clippy::arc_with_non_send_sync)]
                 Arc::new(ExecScan::new(
                     table_scan.table_name.to_string(),
                     table_page_number,
@@ -54,13 +56,15 @@ impl PhysicalPlanner {
                     .iter()
                     .map(|logical_expr|
                         // knowing that logical plan is Projection having only 1 input -> access idx 0
-                        create_physical_expr(&logical_expr, logical_plan.inputs()[0],
+                        create_physical_expr(logical_expr, logical_plan.inputs()[0],
                         ).expect("cannot parse physical expr"))
                     .collect();
                 // * to defer the smart ptr input: Arc<datafusion LogicalPlan>,
                 // then take a reference with &
-                let input_physical_plan = self.plan(&*logical_proj.input);
+                let input_physical_plan = self.plan(&logical_proj.input);
 
+                // TODO: Use Arc without send/sync is usually wrong, please double check here.
+                #[allow(clippy::arc_with_non_send_sync)]
                 Arc::new(ExecProjection::new(input_physical_plan, physical_expressions).unwrap())
             }
 
@@ -72,13 +76,16 @@ impl PhysicalPlanner {
                 error!("Join on {:?}", join.on);
                 let join_on_physical = vec![];
 
+                // TODO: Use Arc without send/sync is usually wrong, please double check here.
+                #[allow(clippy::arc_with_non_send_sync)]
                 Arc::new(
                     ExecJoinHash::try_new(
                         left_physical,
                         right_physical,
                         join_on_physical,
-                        &join.join_type
-                    ).unwrap()
+                        &join.join_type,
+                    )
+                    .unwrap(),
                 )
             }
 
@@ -98,10 +105,10 @@ pub fn create_physical_expr(
     match logical_expr {
         datafusion_expr::Expr::Column(col) => {
             let schema = input.schema();
-            let col_index = schema.index_of_column(&col)?;
+            let col_index = schema.index_of_column(col)?;
             Ok(Arc::new(PhysicalColByIndex { col_index }))
         }
-        datafusion_expr::Expr::Literal(scalar) => {
+        datafusion_expr::Expr::Literal(_) => {
             let column_value = ColumnValue::One;
             Ok(Arc::new(PhysicalLiteral {
                 value: column_value,

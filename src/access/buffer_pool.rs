@@ -30,7 +30,7 @@ impl BufferPool {
     /// Creates a BufferPool that caches up to capacity pages.
     /// DiskManager lifetime must be at least as long as BufferPool
     pub fn new(capacity: usize, disk_manager: SharedDiskManager) -> Self {
-        let capacity = NonZeroUsize::new(capacity as usize).expect("Capacity must be non-zero");
+        let capacity = NonZeroUsize::new(capacity).expect("Capacity must be non-zero");
         BufferPool {
             page_table: LruCache::new(capacity),
             disk_manager: disk_manager.clone(),
@@ -71,7 +71,7 @@ impl BufferPool {
              */
             self.disk_manager
                 .borrow_mut()
-                .write_page(page_id, &*page.borrow())
+                .write_page(page_id, &page.borrow())
                 .unwrap();
         }
     }
@@ -97,8 +97,8 @@ mod tests {
         buffer_pool.get_page(PageId { page_number: 3 });
 
         // should evict first page added because of 2 capacity
-        assert_eq!(buffer_pool.have_page(PageId { page_number: 4 }), false);
-        assert_eq!(buffer_pool.have_page(PageId { page_number: 2 }), true);
-        assert_eq!(buffer_pool.have_page(PageId { page_number: 3 }), true);
+        assert!(!buffer_pool.have_page(PageId { page_number: 4 }));
+        assert!(buffer_pool.have_page(PageId { page_number: 2 }));
+        assert!(buffer_pool.have_page(PageId { page_number: 3 }));
     }
 }

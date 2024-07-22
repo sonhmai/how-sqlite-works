@@ -6,7 +6,7 @@ use crate::physical::expression::physical_expr::PhysicalExpr;
 struct PhysicalCast;
 
 impl PhysicalExpr for PhysicalCast {
-    fn evaluate(&self, record: &DataRecord) -> ColumnValue {
+    fn evaluate(&self, _record: &DataRecord) -> ColumnValue {
         todo!()
     }
 }

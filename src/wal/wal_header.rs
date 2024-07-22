@@ -23,6 +23,7 @@ pub struct WalHeader {
 impl WalHeader {
     pub const SIZE: usize = 32;
 
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         magic_number: u32,
         file_format: u32,

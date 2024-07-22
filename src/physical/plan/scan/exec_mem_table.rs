@@ -1,8 +1,7 @@
-use anyhow::Result;
 use arrow_schema::SchemaRef;
 
-use crate::physical::plan::exec::Exec;
 use crate::model::data_record::DataRecord;
+use crate::physical::plan::exec::Exec;
 
 /// An in-memory table scan for mocking data.
 #[derive(Debug)]
@@ -12,7 +11,7 @@ pub struct ExecMemTable {
 }
 
 impl ExecMemTable {
-    pub fn new(records: &Vec<DataRecord>, schema_ref: SchemaRef) -> Self {
+    pub fn new(_records: &[DataRecord], _schema_ref: SchemaRef) -> Self {
         todo!()
     }
 }
