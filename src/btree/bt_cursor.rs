@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use anyhow::{bail, Result};
-use log::{debug, info};
+use log::{info};
 
 use crate::model::cell_table_leaf::LeafTableCell;
 use crate::model::database::Database;
@@ -99,11 +99,11 @@ impl BtCursor {
         self.index_current_cell = index_next_cell;
         // if page is an interior, we want to move to left most leaf
         // so that cursor can point to the next entry.
-        return if page.borrow().is_leaf() {
+        if page.borrow().is_leaf() {
             Ok(())
         } else {
             self.move_to_left_most_leaf_entry()
-        };
+        }
     }
 
     /// Move to the next entry in the next page in case the cursor
@@ -129,7 +129,7 @@ impl BtCursor {
          */
         self.index_current_cell += 1;
         let current_index = self.index_current_cell;
-        let mut page_rc = self.page_ref();
+        let page_rc = self.page_ref();
 
         let page = page_rc.borrow();
 
@@ -157,7 +157,7 @@ impl BtCursor {
     }
 
     fn get_child_page_num(&mut self) -> u32 {
-        let mut page_rc = self.page_ref();
+        let page_rc = self.page_ref();
         let current_cell_ptr = page_rc
             .borrow_mut() // TODO really need mut?
             .get_cell_ptr(self.index_current_cell as usize);

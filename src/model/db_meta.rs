@@ -31,11 +31,10 @@ impl DbMeta {
 
         let schema_objects: Vec<SchemaObject> = leaf_table_cells
             .iter()
-            .map(|cell| SchemaObject::parse(&cell))
+            .map(|cell| SchemaObject::parse(cell))
             // filter out SchemaObject "sqlite_sequence" because cannot parse
             // DDL without datatype yet: CREATE TABLE sqlite_sequence(name,seq)
-            .filter(|result| result.is_ok())
-            .map(|result| result.unwrap())
+            .flatten()
             .collect();
 
         Ok(DbMeta {

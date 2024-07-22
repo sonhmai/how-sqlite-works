@@ -8,7 +8,6 @@ use anyhow::Result;
 use crate::access::buffer_pool::BufferPool;
 use crate::model::db_meta::DbMeta;
 use crate::storage::default::DefaultDiskManager;
-use crate::storage::disk_manager::DiskManager;
 
 const MAGIC_HEADER: [u8; 16] = *b"SQLite format 3\0";
 const ROOT_PAGE_OFFSET: u8 = 100;

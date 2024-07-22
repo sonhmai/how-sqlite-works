@@ -7,7 +7,6 @@ use datafusion_physical_plan::expressions::Column;
 use datafusion_physical_plan::joins::utils::{build_join_schema, JoinOn};
 
 use crate::model::data_record::DataRecord;
-use crate::physical::expression::physical_expr::PhysicalExpr;
 use crate::physical::plan::exec::Exec;
 
 /// Hash Join Physical Plan for equi joins

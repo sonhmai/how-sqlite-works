@@ -54,12 +54,12 @@ impl PhysicalPlanner {
                     .iter()
                     .map(|logical_expr|
                         // knowing that logical plan is Projection having only 1 input -> access idx 0
-                        create_physical_expr(&logical_expr, logical_plan.inputs()[0],
+                        create_physical_expr(logical_expr, logical_plan.inputs()[0],
                         ).expect("cannot parse physical expr"))
                     .collect();
                 // * to defer the smart ptr input: Arc<datafusion LogicalPlan>,
                 // then take a reference with &
-                let input_physical_plan = self.plan(&*logical_proj.input);
+                let input_physical_plan = self.plan(&logical_proj.input);
 
                 Arc::new(ExecProjection::new(input_physical_plan, physical_expressions).unwrap())
             }
@@ -98,7 +98,7 @@ pub fn create_physical_expr(
     match logical_expr {
         datafusion_expr::Expr::Column(col) => {
             let schema = input.schema();
-            let col_index = schema.index_of_column(&col)?;
+            let col_index = schema.index_of_column(col)?;
             Ok(Arc::new(PhysicalColByIndex { col_index }))
         }
         datafusion_expr::Expr::Literal(scalar) => {

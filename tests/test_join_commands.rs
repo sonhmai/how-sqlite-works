@@ -28,7 +28,7 @@ DataFusion logical plan
 fn cli_sql_inner_join_two_tables() {
     Command::cargo_bin("rsql")
         .unwrap()
-        .args(&[
+        .args([
             "sql",
             "tests/resources/sample.db",
             "select * from apples join oranges on apples.id=oranges.id;",

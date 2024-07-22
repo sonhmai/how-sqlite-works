@@ -6,7 +6,7 @@ use std::process::Command;
 fn cli_sql_scan_table_single_page() {
     Command::cargo_bin("rsql")
         .unwrap()
-        .args(&["sql", "tests/resources/sample.db", "select * from apples;"])
+        .args(["sql", "tests/resources/sample.db", "select * from apples;"])
         .assert()
         .success()
         .stdout(predicates::str::contains(
@@ -23,7 +23,7 @@ fn cli_sql_scan_table_single_page_projection() {
     // subset columns
     Command::cargo_bin("rsql")
         .unwrap()
-        .args(&[
+        .args([
             "sql",
             "tests/resources/sample.db",
             "select name from apples;",
@@ -42,7 +42,7 @@ fn cli_sql_scan_table_multiple_pages() {
     // Traversing only the first table page is not enough to pass this test
     Command::cargo_bin("rsql")
         .unwrap()
-        .args(&[
+        .args([
             "sql",
             "tests/resources/superheroes.db",
             "SELECT id, name FROM superheroes WHERE eye_color = 'Pink Eyes';",

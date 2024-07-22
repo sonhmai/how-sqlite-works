@@ -1,4 +1,3 @@
-use anyhow::Result;
 use arrow_schema::SchemaRef;
 
 use crate::physical::plan::exec::Exec;

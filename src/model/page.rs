@@ -1,10 +1,10 @@
-use std::fmt::{Display, Debug};
+use std::fmt::{Debug};
 
 use anyhow::Result;
 use log::debug;
 
 use crate::model::db_header::DbHeader;
-use crate::model::page_header::{PageHeader, PageType};
+use crate::model::page_header::{PageHeader};
 use crate::model::page_id::PageId;
 
 /// A page in the SQLite database.

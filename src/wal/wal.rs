@@ -8,7 +8,6 @@ A single WAL can and usually does record multiple transactions.
 - a WAL file always grows from beginning to end -> sequential disk IO.
 - each frame has checksum for data integrity and counter for know whether it's checkpointed.
  */
-use std::io::{Read, Write};
 
 use anyhow::Result;
 

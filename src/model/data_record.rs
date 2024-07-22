@@ -1,6 +1,5 @@
 use crate::model::column_value::ColumnValue;
 use crate::varint::decode_varint;
-use log::info;
 
 /// DataRecord needs a lifetime parameter 'a to tell the compiler that Vec values
 /// has the same lifetime a as owning struct DataRecord

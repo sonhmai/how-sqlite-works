@@ -12,7 +12,7 @@ fn cli_no_args() {
 fn cli_dbinfo() {
     Command::cargo_bin("rsql")
         .unwrap()
-        .args(&["sample.db", ".dbinfo"])
+        .args(["sample.db", ".dbinfo"])
         .assert()
         .success()
         .stdout(eq("database page size: 4096"));
