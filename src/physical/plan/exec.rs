@@ -7,8 +7,8 @@ use std::fmt::Debug;
 pub trait Exec: Debug {
     // TODO use Iterator?
     /// Returns a slide to provide a read view without ownership.
-    /// 
-    /// execute can modify self, hence &mut. For example, recording 
+    ///
+    /// execute can modify self, hence &mut. For example, recording
     /// metrics in executing, changing self state.
     fn execute(&mut self) -> &[DataRecord];
 

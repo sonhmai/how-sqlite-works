@@ -1,5 +1,3 @@
-use std::u8;
-
 use anyhow::{bail, Result};
 
 #[derive(Debug)]
@@ -55,7 +53,10 @@ impl PageHeader {
     }
 
     pub const fn is_interior(&self) -> bool {
-        matches!(self.page_type, PageType::InteriorIndex | PageType::InteriorTable)
+        matches!(
+            self.page_type,
+            PageType::InteriorIndex | PageType::InteriorTable
+        )
     }
 
     pub const fn is_table_leaf(&self) -> bool {

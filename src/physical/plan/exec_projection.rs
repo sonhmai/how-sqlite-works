@@ -27,12 +27,8 @@ pub struct ExecProjection {
 }
 
 impl ExecProjection {
-
-    pub fn new(
-        input: Arc<dyn Exec>,
-        expressions:Vec<Arc<dyn PhysicalExpr>>, 
-    ) -> Result<Self> {
-        Ok(Self{
+    pub fn new(input: Arc<dyn Exec>, expressions: Vec<Arc<dyn PhysicalExpr>>) -> Result<Self> {
+        Ok(Self {
             input,
             expressions,
             result: vec![],
@@ -68,7 +64,7 @@ impl Exec for ExecProjection {
 
         todo!()
     }
-    
+
     fn schema(&self) -> arrow_schema::SchemaRef {
         todo!()
     }

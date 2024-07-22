@@ -1,3 +1,4 @@
+#[allow(clippy::upper_case_acronyms, unused)]
 #[derive(Debug, Clone)]
 enum LogRecordType {
     BEGIN,

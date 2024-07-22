@@ -17,7 +17,6 @@ pub struct WalFrameHeader {
 }
 
 impl WalFrameHeader {
-
     pub const SIZE: usize = 24;
 
     pub fn from_bytes(bytes: &[u8; 24]) -> Result<Self> {
@@ -57,7 +56,7 @@ impl WalFrame {
             header,
             // TODO copying the bytes allocates extra memory on heap.
             //  Should a Page is parsed here?
-            data: bytes[WalFrameHeader::SIZE..WalFrameHeader::SIZE + page_size].to_vec()
+            data: bytes[WalFrameHeader::SIZE..WalFrameHeader::SIZE + page_size].to_vec(),
         })
     }
 }
@@ -73,8 +72,9 @@ mod tests {
         let page_size = 4096;
         let wal_frame = WalFrame::from_bytes(
             &wal_bytes.as_slice()[32..], // skip first 32 bytes of WalHeader
-            page_size
-        ).unwrap();
+            page_size,
+        )
+        .unwrap();
 
         println!("{wal_frame:?}");
 

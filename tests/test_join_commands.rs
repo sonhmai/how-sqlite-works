@@ -6,16 +6,16 @@ use std::process::Command;
 
 CREATE TABLE apples
 (
-	id integer primary key autoincrement,
-	name text,
-	color text
+    id integer primary key autoincrement,
+    name text,
+    color text
 );
 CREATE TABLE sqlite_sequence(name,seq);
 CREATE TABLE oranges
 (
-	id integer primary key autoincrement,
-	name text,
-	description text
+    id integer primary key autoincrement,
+    name text,
+    description text
 );
 
 DataFusion logical plan

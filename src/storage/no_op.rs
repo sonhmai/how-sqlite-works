@@ -7,13 +7,11 @@ use crate::storage::disk_manager::DiskManager;
 pub struct NoOpDiskManager {}
 
 impl DiskManager for NoOpDiskManager {
-    fn read_page(&self, page_id: PageId) -> anyhow::Result<Page> {
-        Ok(
-            Page::dummy()
-        )
+    fn read_page(&self, _page_id: PageId) -> anyhow::Result<Page> {
+        Ok(Page::dummy())
     }
 
-    fn write_page(&mut self, page_id: PageId, page: &Page) -> anyhow::Result<()> {
+    fn write_page(&mut self, _page_id: PageId, _page: &Page) -> anyhow::Result<()> {
         Ok(())
     }
 }

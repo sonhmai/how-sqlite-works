@@ -52,7 +52,7 @@ impl Wal {
         let mut frames: Vec<WalFrame> = vec![];
         let mut bytes_cursor = WalHeader::SIZE;
 
-        for i in 0..n_frames {
+        for _ in 0..n_frames {
             let wal_frame = WalFrame::from_bytes(
                 &bytes[bytes_cursor..bytes_cursor + frame_size],
                 header.page_size as usize,

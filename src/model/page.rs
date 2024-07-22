@@ -1,10 +1,10 @@
-use std::fmt::{Debug};
+use std::fmt::Debug;
 
 use anyhow::Result;
 use log::debug;
 
 use crate::model::db_header::DbHeader;
-use crate::model::page_header::{PageHeader};
+use crate::model::page_header::PageHeader;
 use crate::model::page_id::PageId;
 
 /// A page in the SQLite database.
@@ -158,6 +158,7 @@ impl Page {
 
 #[cfg(test)]
 mod tests {
+    use crate::model::page_header::PageType;
     use crate::test_utils::db_bytes;
 
     use super::*;
@@ -195,7 +196,7 @@ mod tests {
         let mut page = Page::parse_db_schema_page(db.as_slice(), SAMPLE_DB_PAGE_SIZE).unwrap();
 
         assert_eq!(page.get_page_number(), 1);
-        assert_eq!(page.is_db_schema_page(), true);
+        assert!(page.is_db_schema_page());
         assert_eq!(page.page_header.page_type, PageType::LeafTable);
         assert_eq!(page.page_header.number_of_cells, 3);
         let cell_ptrs = page.cell_ptrs();

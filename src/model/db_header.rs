@@ -103,7 +103,7 @@ mod tests {
     fn test_parse_header_sample_db() {
         let db_bytes = db_bytes();
 
-        let db_header = DbHeader::parse(&db_bytes.as_slice()).unwrap();
+        let db_header = DbHeader::parse(db_bytes.as_slice()).unwrap();
         assert_eq!(db_header.page_size, 4096);
         assert_eq!(db_header.text_encoding, Enc::Utf8);
         assert_eq!(db_header.db_page_count, 4);

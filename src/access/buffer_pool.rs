@@ -97,8 +97,8 @@ mod tests {
         buffer_pool.get_page(PageId { page_number: 3 });
 
         // should evict first page added because of 2 capacity
-        assert_eq!(buffer_pool.have_page(PageId { page_number: 4 }), false);
-        assert_eq!(buffer_pool.have_page(PageId { page_number: 2 }), true);
-        assert_eq!(buffer_pool.have_page(PageId { page_number: 3 }), true);
+        assert!(!buffer_pool.have_page(PageId { page_number: 4 }));
+        assert!(buffer_pool.have_page(PageId { page_number: 2 }));
+        assert!(buffer_pool.have_page(PageId { page_number: 3 }));
     }
 }

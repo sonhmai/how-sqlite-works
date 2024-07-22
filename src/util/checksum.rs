@@ -18,7 +18,6 @@ pub fn wal_checksum_bytes(cksum: &mut u32, data: &mut [u8]) {
 /// Verify the checksum of a database page.
 pub fn wal_verify_page(data: &[u8]) -> Result<()> {
     let mut cksum = 0u32;
-    let mut saved_cksum = 0u32;
 
     // Calculate the checksum of the page content
     let page_data = &data[0..WAL_CKSUM_OFFSET];
@@ -26,7 +25,7 @@ pub fn wal_verify_page(data: &[u8]) -> Result<()> {
 
     // Read the saved checksum value from the page header
     let saved_cksum_bytes = &data[WAL_CKSUM_OFFSET..WAL_CKSUM_OFFSET + mem::size_of::<u32>()];
-    saved_cksum = u32::from_le_bytes(saved_cksum_bytes.try_into().unwrap());
+    let saved_cksum = u32::from_le_bytes(saved_cksum_bytes.try_into().unwrap());
 
     // Compare the calculated checksum with the saved checksum
     if cksum != saved_cksum {

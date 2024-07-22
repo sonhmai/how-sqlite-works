@@ -43,11 +43,11 @@ impl Exec for ExecScan {
 
             records.push(record);
         }
-        
+
         self.records = records;
         &self.records
     }
-    
+
     fn schema(&self) -> arrow_schema::SchemaRef {
         todo!()
     }

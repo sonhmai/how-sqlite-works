@@ -1,10 +1,10 @@
-use std::fs::OpenOptions;
-use std::io::{Seek, SeekFrom, Write};
-use std::path::PathBuf;
-use std::fs;
 use crate::model::page::Page;
 use crate::model::page_id::PageId;
 use crate::storage::disk_manager::DiskManager;
+use std::fs;
+use std::fs::OpenOptions;
+use std::io::{Seek, SeekFrom, Write};
+use std::path::PathBuf;
 
 /// Provides a logic abstraction for physical file on disk operations.
 #[derive(Debug)]
@@ -27,7 +27,7 @@ impl DefaultDiskManager {
         // CARGO_MANIFEST_DIR is project root /../rust-sqlite
         let db_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(&self.db_file_path);
         // TODO read only the needed page instead of the whole thing into mem
-        
+
         fs::read(db_path).unwrap()
     }
 }
@@ -55,9 +55,9 @@ impl DiskManager for DefaultDiskManager {
 #[cfg(test)]
 mod tests {
     use crate::model::page_id::PageId;
+    use crate::storage::default::DefaultDiskManager;
     use crate::storage::disk_manager::DiskManager;
     use std::path::PathBuf;
-    use crate::storage::default::DefaultDiskManager;
 
     #[test]
     fn test_read_page() {
@@ -66,7 +66,7 @@ mod tests {
         let page_id = PageId { page_number: 2 };
         let page = dm.read_page(page_id).unwrap();
 
-        assert_eq!(page.page_header.is_leaf(), true);
+        assert!(page.page_header.is_leaf());
         assert_eq!(page.page_id.page_number, 2);
         assert_eq!(page.page_header.number_of_cells, 4);
     }
