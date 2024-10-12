@@ -168,3 +168,4 @@ only utf8 is supported.
 - [Apache OpenDAL](https://github.com/apache/incubator-opendal)
 - [GrepTimeDB](https://github.com/GreptimeTeam/greptimedb)
 - [rqlite, A lightweight, distributed relational database built on SQLite in Golang](https://github.com/rqlite/rqlite)
+- [Limbo, an in-process OLTP with async io database management system, compatible with SQLite.](https://github.com/penberg/limbo)
