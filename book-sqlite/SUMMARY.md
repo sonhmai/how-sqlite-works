@@ -6,5 +6,6 @@
 - [Chapter Pager](./chap_pager.md)
 - [Chapter OS Interface](./chap_os_interface.md)
 - [Chapter Code Generator](./chap_code_generator.md)
+- [Chapter Transaction Management](./chap_transaction_management.md)
 - [Chapter WAL](./chap_wal.md)
 - [Chapter Replacing Code Generator By DataFusion](./chap_datafusion.md)
