@@ -1,0 +1,6 @@
+[book]
+authors = ["sonhmai"]
+language = "en"
+multilingual = false
+src = "book-sqlite"
+title = "How SQLite works?"

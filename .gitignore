@@ -20,3 +20,4 @@ Cargo.lock
 /.idea
 local_workspace/
 /.vscode
+book/
