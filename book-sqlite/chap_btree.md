@@ -2,6 +2,7 @@
 This page explains the implementation of BTree module and compare the differences
 of it and related modules to the SQLite implementation.
 
+![architecture.png](architecture.png)
 
 Important
 - Rust-sqlite does not use the VM Layer that SQLite has.
@@ -329,3 +330,8 @@ Step 4: Processing each row
 
 
 Step 5: Closing the cursor
+
+## References
+- [SQLite doc -> Database File Format -> B-tree Pages](https://sqlite.org/fileformat.html#b_tree_pages)
+- https://jvns.ca/blog/2014/10/02/how-does-sqlite-work-part-2-btrees/
+- [Part 7 - Introduction to the B-Tree (Let's Build a Simple Database)](https://cstack.github.io/db_tutorial/parts/part7.html)
