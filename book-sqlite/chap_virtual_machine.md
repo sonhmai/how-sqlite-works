@@ -68,3 +68,44 @@ Opcode Breakdown
     - Operation: Jumps back to the address specified by P2 (1), effectively creating a loop if needed.
 
 The VDBE begins execution at the `Init` opcode, which sets the starting point. The `Once` opcode ensures that the function call is executed only once. The `Function` opcode calls the `date()` function, storing the result in a register. The `Copy` opcode transfers this result to another register, which is then prepared for output by the `ResultRow` opcode. Finally, the `Halt` opcode stops the execution, completing the query processing.
+
+## Instruction
+
+According to the [SQLite documentation](https://www.sqlite.org/opcode.html#instruction_format)
+
+> A bytecoded program in SQLite consists of one or more instructions. Each instruction has an opcode and five operands named P1, P2 P3, P4, and P5. The P1, P2, and P3 operands are 32-bit signed integers. These operands often refer to registers. 
+> - For instructions that operate on b-tree cursors, the P1 operand is usually the cursor number. 
+> - For jump instructions, P2 is usually the jump destination. 
+> - P4 may be a 32-bit signed integer, a 64-bit signed integer, a 64-bit floating point value, a string literal, a Blob literal, a pointer to a collating sequence comparison function, or a pointer to the implementation of an application-defined SQL function, or various other things. 
+> - P5 is a 16-bit unsigned integer normally used to hold flags. 
+
+We will explore the registers later. For now, let's focus on the instruction first.
+
+According to the [SQLite doc](https://www.sqlite.org/opcode.html#the_opcodes), there are currently 189 opcodes defined by the virtual machine. Hence, there are a similar number of instructions. When executing the instructions, different actions will be taken by the virtual machine depends on instruction and opcode type. In Rust, we can use an enum to represent this behavior. Enum can help us check whether we miss the execution for any bytecode. Let's represent `Instruction` by an enum in the file `src/instruction.rs`.
+
+```rust
+#[derive(Debug)]
+pub enum Instruction {
+   /// Halt the program
+   Halt,
+}
+```
+
+The first instruction to represent is [Halt](https://www.sqlite.org/opcode.html#Halt). It is important in the VM execution. The VM begins execution on instruction number 0 and stops when a Halt instruction is seen.
+
+Then we make the program execution stop when seeing a Halt.
+
+```rust
+struct Program {}
+
+impl Program {
+   pub fn step(&self) -> Result<StepResult> {
+      let insn = &self.instructions[state.pc as usize];
+      match insn {
+         Instruction::Halt => {
+            return Ok(StepResult::Done);
+         }
+      }
+   }
+}
+```
