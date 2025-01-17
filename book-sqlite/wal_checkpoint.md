@@ -168,6 +168,7 @@ int sqlite3Checkpoint(sqlite3 *db, int iDb, int eMode, int *pnLog, int *pnCkpt){
 ```
 
 
+
 ## checkpoint opcode
 
 ### where is opcode CHECKPOINT stored and processed?
