@@ -120,11 +120,57 @@ static int walCheckpoint(
 
 ## path from pragma to c apis
 
-what happens from `pragma wal_checkpoint;` to `sqlite3_wal_checkpoint_v2(..)` and `sqlite3_wal_checkpoint(..)`
+```c
 
+// parser
+
+// add bytecode
+
+// bytecode execution vdbe.c
+case OP_Checkpoint: {
+  int i;                          /* Loop counter */
+  int aRes[3];                    /* Results */
+  Mem *pMem;                      /* Write results here */
+
+  assert( vdbePointer->readOnly==0 );
+  aRes[0] = 0;
+  aRes[1] = aRes[2] = -1;
+  assert( pOp->p2==SQLITE_CHECKPOINT_PASSIVE
+       || pOp->p2==SQLITE_CHECKPOINT_FULL
+       || pOp->p2==SQLITE_CHECKPOINT_RESTART
+       || pOp->p2==SQLITE_CHECKPOINT_TRUNCATE
+  );
+
+  // db=db - the database
+  // iDb=pOp->p1 database index
+  // eMode=pOp->p2 - enum WAL mode: one of SQLITE_CHECKPOINT_PASSIVE, FULL, RESTART or TRUNCATE
+  // int *pnLog=&aRes[1] - size of WAL log in frames
+  // int *pnCkpt=&aRes[2] - total number of frames checkpointed
+  rc = main.sqlite3Checkpoint(db, pOp->p1, pOp->p2, &aRes[1], &aRes[2]);
+  if( rc ){
+    if( rc!=SQLITE_BUSY ) goto abort_due_to_error;
+    rc = SQLITE_OK;
+    aRes[0] = 1;
+  }
+  for(i=0, pMem = &aMem[pOp->p3]; i<3; i++, pMem++){
+    sqlite3VdbeMemSetInt64(pMem, (i64)aRes[i]);
+  }   
+  break;
+};  
+
+// main.c
+// this is the 2nd call in the api section
+int sqlite3Checkpoint(sqlite3 *db, int iDb, int eMode, int *pnLog, int *pnCkpt){
+  // ...
+}
+
+// call to btree module, the other follows
+```
 
 
 ## checkpoint opcode
+
+### where is opcode CHECKPOINT stored and processed?
 
 opcode: CHECKPOINT
 - https://www.sqlite.org/opcode.html
