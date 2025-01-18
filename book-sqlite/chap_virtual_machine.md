@@ -109,3 +109,81 @@ impl Program {
    }
 }
 ```
+
+## Vdbe struct
+
+```c
+/*
+** An instance of the virtual machine.  This structure contains the complete
+** state of the virtual machine.
+**
+** The "sqlite3_stmt" structure pointer that is returned by sqlite3_prepare()
+** is really a pointer to an instance of this structure.
+*/
+struct Vdbe {
+  sqlite3 *db;            /* The database connection that owns this statement */
+  Vdbe **ppVPrev,*pVNext; /* Linked list of VDBEs with the same Vdbe.db */
+  Parse *pParse;          /* Parsing context used to create this Vdbe */
+  ynVar nVar;             /* Number of entries in aVar[] */
+  int nMem;               /* Number of memory locations currently allocated */
+  int nCursor;            /* Number of slots in apCsr[] */
+  u32 cacheCtr;           /* VdbeCursor row cache generation counter */
+  int pc;                 /* The program counter */
+  int rc;                 /* Value to return */
+  i64 nChange;            /* Number of db changes made since last reset */
+  int iStatement;         /* Statement number (or 0 if has no opened stmt) */
+  i64 iCurrentTime;       /* Value of julianday('now') for this statement */
+  i64 nFkConstraint;      /* Number of imm. FK constraints this VM */
+  i64 nStmtDefCons;       /* Number of def. constraints when stmt started */
+  i64 nStmtDefImmCons;    /* Number of def. imm constraints when stmt started */
+  Mem *aMem;              /* The memory locations */
+  Mem **apArg;            /* Arguments to currently executing user function */
+  VdbeCursor **apCsr;     /* One element of this array for each open cursor */
+  Mem *aVar;              /* Values for the OP_Variable opcode. */
+
+  /* When allocating a new Vdbe object, all of the fields below should be
+  ** initialized to zero or NULL */
+
+  Op *aOp;                /* Space to hold the virtual machine's program */
+  int nOp;                /* Number of instructions in the program */
+  int nOpAlloc;           /* Slots allocated for aOp[] */
+  Mem *aColName;          /* Column names to return */
+  Mem *pResultRow;        /* Current output row */
+  char *zErrMsg;          /* Error message written here */
+  VList *pVList;          /* Name of variables */
+
+  // omitting other fields...
+}
+```
+
+### vdbe database connection
+
+```c
+struct Vdbe {
+  sqlite3 *db;            /* The database connection that owns this statement */
+  // ...
+}
+```
+
+```rust
+// Vdbe program
+pub struct Program {
+    pub connection: Weak<Connection>,
+}
+
+pub struct Connection {
+    db: Arc<Database>,
+    pager: Rc<Pager>,
+    schema: Rc<RefCell<Schema>>,
+    header: Rc<RefCell<DatabaseHeader>>,
+    // ...
+}
+```
+
+The database connection owning vdbe statement is modeled as `Weak<Connection>` in Rust
+- Weak is a version of Rc that holds a non-owning reference to the managed allocation. 
+- The allocation is accessed by calling upgrade on the Weak pointer, which returns an Option<Rc<T>>.
+- `Weak` reference does not prevent the value stored in the allocation from being dropped.
+- because it does not count towards ownership.
+- A Weak pointer is useful for keeping a temporary reference to the allocation managed by Rc without preventing its inner value from being dropped. 
+- It is also used to prevent circular references between Rc pointers, since mutual owning references would never allow either Rc to be dropped.

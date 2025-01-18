@@ -120,6 +120,29 @@ static int walCheckpoint(
 
 ## path from pragma to c apis
 
+https://sqlite.org/pragma.html#pragma_wal_checkpoint
+
+- checkpoint runs on `db: sqlite3` which is the database connection current Vdbe program is holding.
+- the equivalient in Rust is `Connection` struct
+- need to add `checkpoint` method to `Connection`
+- it is available, it calls `self.pager.clear_page_cache()`
+
+```c
+// case OP_Checkpoint bytecode execution
+rc = main.sqlite3Checkpoint(db, pOp->p1, pOp->p2, &aRes[1], &aRes[2]);
+
+// vdbe.c executing a program (sqlite3_step)
+int sqlite3VdbeExec(Vdbe *p) {
+  sqlite3 *db = p->db; // the db
+}
+
+// vdbe.h
+struct Vdbe {
+  sqlite3 *db;            /* The database connection that owns this statement */
+}
+```
+
+
 ```c
 
 // parser
@@ -127,6 +150,7 @@ static int walCheckpoint(
 // add bytecode
 
 // bytecode execution vdbe.c
+// Opcode: CHECKPOINT P1 P2 P3 * *
 case OP_Checkpoint: {
   int i;                          /* Loop counter */
   int aRes[3];                    /* Results */
@@ -172,10 +196,10 @@ int sqlite3Checkpoint(sqlite3 *db, int iDb, int eMode, int *pnLog, int *pnCkpt){
 
 ### where is opcode CHECKPOINT stored and processed?
 
-opcode: CHECKPOINT
+Opcode: CHECKPOINT P1 P2 P3 * *
 - https://www.sqlite.org/opcode.html
-- Checkpoint database P1. This is a no-op if P1 is not currently in WAL mode. 
-- Parameter P2 is one of SQLITE_CHECKPOINT_PASSIVE, FULL, RESTART, or TRUNCATE. 
+- P1: int iDb. Checkpoint database P1. This is a no-op if P1 is not currently in WAL mode. 
+- P2: int. enum eMode, one of SQLITE_CHECKPOINT_PASSIVE, FULL, RESTART, or TRUNCATE. 
 - Write 1 or 0 into mem[P3] if the checkpoint returns SQLITE_BUSY or not, respectively. 
 - Write the number of pages in the WAL after the checkpoint into mem[P3+1] and the number of pages in the WAL that have been checkpointed after the checkpoint completes into mem[P3+2]. 
 - However on an error, mem[P3+1] and mem[P3+2] are initialized to -1.
@@ -199,7 +223,7 @@ addr  opcode         p1    p2    p3    p4             p5  comment
 
 Test that doing a checkpoint while there is a txn lock returns SQLITE_BUSY
 
-```
+```shell
 sqlite3 sqlite3.db
 
 # pragma on empty db should be 0,0,0
