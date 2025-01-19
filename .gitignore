@@ -21,3 +21,6 @@ Cargo.lock
 local_workspace/
 /.vscode
 book/
+
+# test db
+*.db
