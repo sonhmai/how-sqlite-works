@@ -15,22 +15,6 @@ Write path
    - or roll-forward/ redo operations of committed transactions that has not been reflected in db files
 
 
-### Write-Ahead Logging
-
-There are and cons of using WAL instead of rollback journal. 
-Some of from SQLite website is depicted below. For more see https://sqlite.org/wal.html
-
-Pros
-1. WAL is significantly faster in most scenarios.
-2. WAL provides more concurrency as readers do not block writers and a writer does not block readers. Reading and writing can proceed concurrently.
-3. Disk I/O operations tends to be more sequential using WAL.
-4. ...
-
-Cons
-1. All processes using a database must be on the same host computer; WAL does not work over a network filesystem.
-2. not possible to change the page_size after entering WAL mode.
-3. ...
-
 ### Implement a transaction
 
 Pager (transaction manager)
@@ -40,6 +24,127 @@ Pager (transaction manager)
 - follows strict two phase locking protocol to produce serializable transactions' execution.
 - determines content of log records, writes them to journal file.
 
-#### Read path
+### Opcode Transaction
 
-#### Write path
+`Transaction`: Begin a transaction on database P1 if a transaction is not already active. 
+
+P1 
+- is the index of the database file on which the transaction is started. 
+- =0 -> main database file
+- =1 -> file used for temporary tables. 
+- `>=2` -> attached databases.
+
+P2
+- If P2 is zero, then a read-transaction is started. 
+- If P2 is non-zero, then a write-transaction is started, or if a read-transaction is already active, it is upgraded to a write-transaction. 
+  - If P2 is 2 or more then an exclusive transaction is started.
+
+P3, P4, P5
+- for transaction cookie feature. not as important as P1 and P2.
+- P5 # 0 -> checks schema cookie against `P3` and schema gen counter against `P4`. 
+
+
+```bash
+sqlite> explain begin immediate;
+addr  opcode         p1    p2    p3    p4             p5  comment
+----  -------------  ----  ----  ----  -------------  --  -------------
+0     Init           0     5     0                    0   Start at 5
+1     Transaction    0     1     0                    0
+2     Transaction    1     1     0                    0
+3     AutoCommit     0     0     0                    0
+4     Halt           0     0     0                    0
+5     Goto           0     1     0                    0
+```
+
+### Related code
+
+```c
+// pager.h
+/* Functions used to manage pager transactions and savepoints. */
+void sqlite3PagerPagecount(Pager*, int*);
+// Begin a write-transaction on this pager object.
+int sqlite3PagerBegin(Pager*, int exFlag, int);
+// Sync db file of the pager.
+int sqlite3PagerCommitPhaseOne(Pager*,const char *zSuper, int);
+int sqlite3PagerExclusiveLock(Pager*);
+int sqlite3PagerSync(Pager *pPager, const char *zSuper);
+// Finalize journal file so it cannot be used for hot-journal rollback.
+int sqlite3PagerCommitPhaseTwo(Pager*);
+int sqlite3PagerRollback(Pager*);
+int sqlite3PagerOpenSavepoint(Pager *pPager, int n);
+int sqlite3PagerSavepoint(Pager *pPager, int op, int iSavepoint);
+int sqlite3PagerSharedLock(Pager *pPager);
+
+// wal.h
+/* Used by readers to open (lock) and close (unlock) a snapshot.  A 
+** snapshot is like a read-transaction.  It is the state of the database
+** at an instant in time.  sqlite3WalOpenSnapshot gets a read lock and
+** preserves the current state even if the other threads or processes
+** write to or checkpoint the WAL.  sqlite3WalCloseSnapshot() closes the
+** transaction and releases the lock. */
+int sqlite3WalBeginReadTransaction(Wal *pWal, int *);
+void sqlite3WalEndReadTransaction(Wal *pWal);
+/* Obtain or release the WRITER lock. */
+int sqlite3WalBeginWriteTransaction(Wal *pWal);
+int sqlite3WalEndWriteTransaction(Wal *pWal);
+```
+
+
+### Write transaction in WAL
+
+Pager state: WRITER_LOCKED
+
+IN WAL mode, `WalBeginWriteTransaction()` is called to lock the log file.
+If the connection is running with locking_mode=exclusive, an attempt
+is made to obtain an EXCLUSIVE lock on the database file.
+* A write transaction is active.
+* If the connection is open in rollback-mode, a RESERVED or greater
+  lock is held on the database file.
+* If the connection is open in WAL-mode, a WAL write transaction
+  is open (i.e. sqlite3WalBeginWriteTransaction() has been successfully
+  called).
+* The dbSize, dbOrigSize and dbFileSize variables are all valid.
+* The contents of the pager cache have not been modified.
+* The journal file may or may not be open.
+* Nothing (not even the first header) has been written to the journal.
+
+**Start a transaction**
+```c
+// pager.c
+// Begin a write-transaction on this pager object.
+int sqlite3PagerBegin(Pager*, int exFlag, int); {
+   if( pagerUseWal(pPager) ) {
+      // other code for locking
+
+      /* Grab the write lock on the log file. If successful, upgrade to
+      ** PAGER_RESERVED state. Otherwise, return an error code to the caller.
+      ** The busy-handler is not invoked if another connection already
+      ** holds the write-lock. If possible, the upper layer will call it.
+      */
+      rc = sqlite3WalBeginWriteTransaction(pPager->pWal);
+   }
+
+   //...
+   // change pager to WRITER_LOCKED state
+   pPager->eState = PAGER_WRITER_LOCKED;
+   PAGERTRACE(("TRANSACTION %d\n", PAGERID(pPager)));
+   //...
+}
+
+// wal.c
+// Start a write txn on the WAL.
+int sqlite3WalBeginWriteTransaction(Wal *pWal){
+   // Only one writer allowed at a time.  
+   // Get the write lock. Return SQLITE_BUSY if unable.
+
+   // set writeLock
+   pWal->writeLock = 1;
+
+   // If another connection has written to the database file since the
+   // time the read transaction on this connection was started, then
+   // the write is disallowed.
+}
+```
+
+### Write transaction in rollback
+
