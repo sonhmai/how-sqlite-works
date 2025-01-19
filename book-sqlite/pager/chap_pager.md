@@ -2,7 +2,9 @@
 
 Contents
 1. Summary
-2. Page Cache
+2. Pager interface
+3. Page cache
+4. Transaction management
 
 ![Pager submodule interconnection](pager_submodule_interconnection.png)
 
