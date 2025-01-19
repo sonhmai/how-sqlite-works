@@ -8,6 +8,22 @@ Contents
 
 ## Transaction in SQLite
 
+```sql
+-- example of 2 transactions in sqlite
+begin;
+create table test1(a int, b text);
+insert into test1(a,b) values(1,'a');
+insert into test1(a,b) values(2,'b');
+insert into test1(a,b) values(3,'c');
+update test1 set b = 'x' where a=2;
+delete from test1 where a=3;
+commit;
+
+begin;
+insert into test1(a,b)values(4,'d');
+rollback;
+```
+
 - default mode autocommit
   - read-txn to execute select stmt
   - write-txn to execute non-select (insert, update, delete, etc.)
@@ -52,6 +68,9 @@ Write path
    - either rollback/ undo operations of uncommitted transactions
    - or roll-forward/ redo operations of committed transactions that has not been reflected in db files
 
+Commit protocol
+- default is `flush-log-at-commit` + `flush-database-at-commit`
+
 ### Opcode Transaction
 
 `Transaction`: Begin a transaction on database P1 if a transaction is not already active. 
@@ -88,20 +107,28 @@ addr  opcode         p1    p2    p3    p4             p5  comment
 
 ```c
 // pager.h
-/* Functions used to manage pager transactions and savepoints. */
+// manage transactions
 void sqlite3PagerPagecount(Pager*, int*);
+
 // Begin a write-transaction on this pager object.
 int sqlite3PagerBegin(Pager*, int exFlag, int);
+// Pager.begin_read_tx()
+// Pager.begin_write_tx()
+
 // Sync db file of the pager.
 int sqlite3PagerCommitPhaseOne(Pager*,const char *zSuper, int);
-int sqlite3PagerExclusiveLock(Pager*);
 int sqlite3PagerSync(Pager *pPager, const char *zSuper);
 // Finalize journal file so it cannot be used for hot-journal rollback.
 int sqlite3PagerCommitPhaseTwo(Pager*);
 int sqlite3PagerRollback(Pager*);
+
+int sqlite3PagerExclusiveLock(Pager*);
+// Obtain shared lock on db file.
+int sqlite3PagerSharedLock(Pager *pPager);
+
+// pager.h savepoints
 int sqlite3PagerOpenSavepoint(Pager *pPager, int n);
 int sqlite3PagerSavepoint(Pager *pPager, int op, int iSavepoint);
-int sqlite3PagerSharedLock(Pager *pPager);
 
 // wal.h
 /* Used by readers to open (lock) and close (unlock) a snapshot.  A 
@@ -117,6 +144,31 @@ int sqlite3WalBeginWriteTransaction(Wal *pWal);
 int sqlite3WalEndWriteTransaction(Wal *pWal);
 ```
 
+### Read transaction in WAL
+
+```c
+// pager.c
+
+// Obtain shared lock on db file.
+int sqlite3PagerSharedLock(Pager *pPager) {
+  // ..
+  if( pagerUseWal(pPager) ){
+    assert( rc==SQLITE_OK );
+    rc = pagerBeginReadTransaction(pPager);
+  }
+}
+
+// Begin a read txn on WAL
+static int pagerBeginReadTransaction(Pager *pager) {
+  // If the database contents have changes since the previous read transaction, 
+  // then *pChanged is set to 1 before returning.
+  // Pager layer will use this to know that its cache is stale and flush is needed.
+  rc = wal.sqlite3WalBeginReadTransaction(pPager->pWal, &changed);
+}
+
+// wal.c
+int sqlite3WalBeginReadTransaction(Wal *pWal, int *pChanged)
+```
 
 ### Write transaction in WAL
 
