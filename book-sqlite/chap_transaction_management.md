@@ -8,6 +8,22 @@ Contents
 
 ## Transaction in SQLite
 
+```sql
+-- example of 2 transactions in sqlite
+begin;
+create table test1(a int, b text);
+insert into test1(a,b) values(1,'a');
+insert into test1(a,b) values(2,'b');
+insert into test1(a,b) values(3,'c');
+update test1 set b = 'x' where a=2;
+delete from test1 where a=3;
+commit;
+
+begin;
+insert into test1(a,b)values(4,'d');
+rollback;
+```
+
 - default mode autocommit
   - read-txn to execute select stmt
   - write-txn to execute non-select (insert, update, delete, etc.)
@@ -51,6 +67,9 @@ Write path
 3. when transaction aborted or there is a crash, db uses persisted log to move db to a consistent state.
    - either rollback/ undo operations of uncommitted transactions
    - or roll-forward/ redo operations of committed transactions that has not been reflected in db files
+
+Commit protocol
+- default is `flush-log-at-commit` + `flush-database-at-commit`
 
 ### Opcode Transaction
 
