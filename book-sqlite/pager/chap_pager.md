@@ -9,8 +9,7 @@ Below is a conceptual mapping of equivalent components in SQLite to this impleme
 - Lock manager -> Lock manager
 
 
-## What SQLite does
-
-
 ![PagerSubModuleInterconnection](PagerSubModuleInterconnection.png)
 
+
+![pager with processes concurrent reads](pager_processes_concurrent_reads.png)
