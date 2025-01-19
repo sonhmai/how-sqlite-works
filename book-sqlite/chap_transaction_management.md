@@ -3,17 +3,37 @@
 Contents
 1. how SQLite achieves ACID (Atomicity, Consistency, Isolation, Durability)
 2. how SQLite uses locking
-3. implementing transaction manager (concurrency manager) `Pager` in sqlite
-4. implementing recovery manager
+3. how transaction manager (concurrency manager) `Pager` is implemented
+4. how recovery is implemented
+
+## Transaction in SQLite
+
+- default mode autocommit
+  - read-txn to execute select stmt
+  - write-txn to execute non-select (insert, update, delete, etc.)
+  - txn is committed or aborted end of stmt
+  - overriden by apps by `begin` commands -> `user transaction`
+- sqlite supports savepoints in user txn
+  - txn can setup multiple savepoints
+  - can revert back to db state to any of savepoints
+  - and continue execute from there
+- in a user txn, update stmts are executed in `sub-txn` one after another sequentially.
+- sqlite concurrency control mechanism: `lock-based` -> `serializable`
+  - database-level locking, no finer-grained locks.
+  - 5 lock types implemented using `native read write locks` in different bytes of db file.
+    - NOLOCK
+    - SHARED
+    - RESERVED
+    - PENDING
+    - EXCLUSIVE
+  - user txn does not hold lock on db until the need arises.
+- 2 types of begins
+  - `begin exclusive` -> exclusive lock on all dbs (main and attached)
+  - `begin immediate` -> reserved lock
+- sqlite implements recovery by journal based logging and undo.
 
 
-Write path
-1. write log record containing recovery info (e.g. old and new values of items) to transaction log/ journal.
-2. DBMS persists log record to disk before changing item in db.
-3. when transaction aborted or there is a crash, db uses persisted log to move db to a consistent state.
-   - either rollback/ undo operations of uncommitted transactions
-   - or roll-forward/ redo operations of committed transactions that has not been reflected in db files
-
+![locking state transition](locking_state_transition.png)
 
 ### Implement a transaction
 
@@ -23,6 +43,14 @@ Pager (transaction manager)
 - decides on mode of locks and time of acquiring and releasing locks.
 - follows strict two phase locking protocol to produce serializable transactions' execution.
 - determines content of log records, writes them to journal file.
+
+
+Write path
+1. write log record containing recovery info (e.g. old and new values of items) to transaction log/ journal.
+2. DBMS persists log record to disk before changing item in db.
+3. when transaction aborted or there is a crash, db uses persisted log to move db to a consistent state.
+   - either rollback/ undo operations of uncommitted transactions
+   - or roll-forward/ redo operations of committed transactions that has not been reflected in db files
 
 ### Opcode Transaction
 
@@ -148,3 +176,12 @@ int sqlite3WalBeginWriteTransaction(Wal *pWal){
 
 ### Write transaction in rollback
 
+todo
+
+## Refs
+- https://reorchestrate.com/posts/sqlite-transactions/
+- https://www.sqlite.org/lang_transaction.html
+- Transaction bytecode https://www.sqlite.org/opcode.html
+- https://www.sqlitetutor.com/transaction/
+- https://www.bswanson.dev/blog/exploring-sqlite-internals
+- [Book - SQLite Database System Design and Implementation-Sibsankar Haldar (2016)](https://books.google.com.vn/books?id=OEJ1CQAAQBAJ)
