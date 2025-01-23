@@ -1,6 +1,12 @@
 # WAL Checkpoint
 
-## checkpoint api 
+Contents
+1. [checkpoint api](#checkpoint_api)
+2. from pragma to checkpoint
+3. checkpoint opcode
+4. examples
+
+## checkpoint_api 
 
 ```c
 // main.c
@@ -44,15 +50,22 @@ int sqlite3PagerCheckpoint(
   int *pnLog,                     /* OUT: Final number of frames in log */
   int *pnCkpt                     /* OUT: Final number of checkpointed frames */
 ){
-  rc = sqlite3WalCheckpoint(pPager->pWal, db, eMode,
-        (eMode==SQLITE_CHECKPOINT_PASSIVE ? 0 : pPager->xBusyHandler),
-        pPager->pBusyHandlerArg,
-        pPager->walSyncFlags, pPager->pageSize, (u8 *)pPager->pTmpSpace,
-        pnLog, pnCkpt
+  rc = wal.sqlite3WalCheckpoint(
+    pPager->pWal, 
+    db, 
+    eMode,
+    (eMode==SQLITE_CHECKPOINT_PASSIVE ? 0 : pPager->xBusyHandler),
+    pPager->pBusyHandlerArg,
+    pPager->walSyncFlags, 
+    pPager->pageSize, 
+    (u8 *)pPager->pTmpSpace,
+    // output
+    pnLog, 
+    pnCkpt
     );
 }
 
-// still in pager.c
+// wal.c
 // Obtain a CHECKPOINT lock and then backfill as much information as
 // we can from WAL into the database.
 int sqlite3WalCheckpoint(
@@ -64,6 +77,7 @@ int sqlite3WalCheckpoint(
   int sync_flags,                 /* Flags to sync db file with (or 0) */
   int nBuf,                       /* Size of temporary buffer */
   u8 *zBuf,                       /* Temporary buffer to use */
+  // output
   int *pnLog,                     /* OUT: Number of frames in WAL */
   int *pnCkpt                     /* OUT: Number of backfilled frames in WAL */
 ){
@@ -71,10 +85,14 @@ int sqlite3WalCheckpoint(
   // read wal-index header
   // copy data from log to db file
   rc = walCheckpoint(pWal, db, eMode2, xBusy2, pBusyArg, sync_flags,zBuf);
-  // unlock
+
+  // set output
+  if( pnLog ) *pnLog = (int)pWal->hdr.mxFrame;
+  if( pnCkpt ) *pnCkpt = (int)(walCkptInfo(pWal)->nBackfill);
+  // unlock ...
 }
 
-// wal.c
+// still in wal.c - calling private function.
 // - Copy as much content as we can from the WAL back into the database file.
 // - This routine will never overwrite a database page that a concurrent reader might be using.
 // - Fsync is also called on the database file if (and only if) the entire WAL content is copied into the database file. 
@@ -118,7 +136,7 @@ static int walCheckpoint(
 // the above routine walCheckpoint persisted data to disk.
 ```
 
-## path from pragma to c apis
+## from pragma to c apis
 
 https://sqlite.org/pragma.html#pragma_wal_checkpoint
 
@@ -281,7 +299,128 @@ sqlite> pragma wal_checkpoint;
 0|2|2
 ```
 
+## checkpoint result
 
+1. `pnLog` number of pages in wal
+2. `pnCkpt` number of pages done moving to db file
+
+C
+```c
+// wal.c
+int sqlite3WalCheckpoint(
+  Wal *pWal,                      /* Wal connection */
+  sqlite3 *db,                    /* Check this handle's interrupt flag */
+  int eMode,                      /* PASSIVE, FULL, RESTART, or TRUNCATE */
+  int (*xBusy)(void*),            /* Function to call when busy */
+  void *pBusyArg,                 /* Context argument for xBusyHandler */
+  int sync_flags,                 /* Flags to sync db file with (or 0) */
+  int nBuf,                       /* Size of temporary buffer */
+  u8 *zBuf,                       /* Temporary buffer to use */
+  // output
+  int *pnLog,                     /* OUT: Number of frames in WAL */
+  int *pnCkpt                     /* OUT: Number of backfilled frames in WAL */
+){
+  // ...
+  if( pnLog ) *pnLog = (int)pWal->hdr.mxFrame;
+  if( pnCkpt ) *pnCkpt = (int)(walCkptInfo(pWal)->nBackfill);
+  // ...
+}
+
+struct WalIndexHdr {
+  u32 mxFrame;                    /* Index of last valid frame in the WAL */
+  // ...
+};
+
+struct Wal {
+  WalIndexHdr hdr;           /* Wal-index header for current transaction */
+  u32 minFrame;              /* Ignore wal frames before this one */
+}
+```
+
+Rust 
+```rust
+struct WalFile {
+  shared: Arc<RwLock<WalFileShared>>,
+  /// This is the index to the read_lock in WalFileShared that we are holding. 
+  /// This lock contains the max frame for this connection.
+  max_frame_read_lock_index: usize,
+  /// Max and min frame allowed to lookup range=(min_frame..max_frame)
+  max_frame: u64,
+  min_frame: u64,
+}
+
+fn Wal.begin_read_tx() {
+  self.maxframe = max_read_mark as u64;
+}
+
+/// Find latest frame containing a page.
+fn Wal.find_frame(&self, page_id: u64) {
+  //...
+  for frame in frames.iter().rev() {
+      if *frame <= self.max_frame {
+          return Ok(Some(*frame));
+      }
+  }
+  Ok(None)
+}
+
+fn Wal.get_max_frame() -> u64 {
+  self.max_frame
+}
+
+// get_max_frame usages
+Pager.allocate_page()
+  PageCacheKey::new(page.get().id, Some(self.wal.borrow().get_max_frame()));
+Pager.read_page()
+  PageCacheKey::new(page_idx, Some(self.wal.borrow().get_max_frame()))
+Pager.cacheflush()
+  PageCacheKey::new(*page_id, Some(self.wal.borrow().get_max_frame()))
+Pager.load_page()
+Pager.put_loaded_page()
+  PageCacheKey::new(id, Some(self.wal.borrow().get_max_frame()))
+
+/// include the max_frame that a connection will read from so that if two
+// connections have different max_frames, they might read different wal frames.
+pub struct PageCacheKey {
+  pgno: usize,
+  max_frame: Option<u64>,
+}
+
+pub struct DumbLruPageCache {
+  // different max_frame for the same page results in different key
+  map: RefCell<HashMap<PageCacheKey, NonNull<PageCacheEntry>>>,
+}
+
+/// Part of WAL shared btw threads.
+/// One difference between SQLite and limbo: never support multi process, 
+/// meaning we don't need WAL's index file. 
+/// So we can do stuff like this without shared memory.
+struct WalFileShared {
+  min_frame: u64,
+  max_frame: u64,
+  nbackfills: u64,
+}
+```
+
+is `mxFrame` in SQLite and `max_frame` in Rust the same?
+
+
+
+### pnCkpt
+
+```c
+// wal.c
+if( pnCkpt ) *pnCkpt = (int)(walCkptInfo(pWal)->nBackfill);
+
+
+struct WalCkptInfo {
+  u32 nBackfill;                  /* Number of WAL frames backfilled into DB */
+  u32 aReadMark[WAL_NREADER];     /* Reader marks */
+  u8 aLock[SQLITE_SHM_NLOCK];     /* Reserved space for locks */
+  u32 nBackfillAttempted;         /* WAL frames perhaps written, or maybe not */
+  u32 notUsed0;                   /* Available for future enhancements */
+};
+```
 
 
 
