@@ -1,5 +1,21 @@
 # Chapter 1
 
+![architecture](./architecture.png)
+
+Modules
+1. `core`: ingesting and executing SQL statements.
+   1. Library interface
+   2. sql command processor
+   3. virtual machine (virtual database engine VDBE): executing logic of bytecode program produced by code generator, frees allocated memory and cursor for query execution, rollback changes to db if error.
+2. `SQL compiler`: translate SQL stmt into bytecode program that VM can execute.
+   1. tokenizer
+   2. parser
+   3. code generator
+3. `backend`: providing db pages access and OS actions to persist data.
+   1. B-Tree: how data is stored on disk logically
+   2. Pager: transaction manager, lock manager, log manager, page cache
+   3. OS Interface (Virtual File System, VFS): portable interface with OS
+4. `accesories`: test suite and utilities for memory allocation, string operations, and random number generation
 
 ## Architecture
 Differences to SQLite official implementation:
