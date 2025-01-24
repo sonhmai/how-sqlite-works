@@ -1,6 +1,6 @@
 # Summary
 
-- [Chapter 1 Overview](./chap1_overview.md)
+- [Chapter 1 Overview](./chap1_overview/chap1_overview.md)
 - [Chapter Virtual Machine](./chap_virtual_machine.md)
 - [Chapter B-Tree](./chap_btree.md)
 - [Chapter Pager](./pager/chap_pager.md)

@@ -105,7 +105,6 @@ pub struct WalFileShared {
     min_frame: u64,
     max_frame: u64,
 
-    // is this one the same as C code WalCkptInfo.nBackfill
     nbackfills: u64,
 }
 ```
