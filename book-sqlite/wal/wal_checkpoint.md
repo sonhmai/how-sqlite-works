@@ -402,27 +402,6 @@ struct WalFileShared {
 }
 ```
 
-is `mxFrame` in SQLite and `max_frame` in Rust the same?
-
-
-
-### pnCkpt
-
-```c
-// wal.c
-if( pnCkpt ) *pnCkpt = (int)(walCkptInfo(pWal)->nBackfill);
-
-
-struct WalCkptInfo {
-  u32 nBackfill;                  /* Number of WAL frames backfilled into DB */
-  u32 aReadMark[WAL_NREADER];     /* Reader marks */
-  u8 aLock[SQLITE_SHM_NLOCK];     /* Reserved space for locks */
-  u32 nBackfillAttempted;         /* WAL frames perhaps written, or maybe not */
-  u32 notUsed0;                   /* Available for future enhancements */
-};
-```
-
-
 
 
 
