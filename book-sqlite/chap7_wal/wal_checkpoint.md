@@ -6,6 +6,39 @@ Contents
 3. checkpoint opcode
 4. examples
 
+Why need `checkpoint`?
+- When the DBMS restarts a database upon a failure, the very first thing it needs to do is to recover the database. 
+- The only recovery information available is the journal content that has survived the failure. 
+- The DBMS may need to read all log records from the journal and process the records against the database. 
+- Consequently, the recovery becomes a time consuming operation, especially when the journal contains a large number of log records. 
+- To reduce recovery time at restarts, the DBMS checkpoints the database periodically. 
+
+What is a `checkpoint`?
+- A checkpoint is a kind of synchronization point between the database and the recovery subsystem. 
+- A checkpoint establishes a relatively recent database state and journal content and these can be used as a basis for recovery at future restarts. 
+- Checkpoints are taken solely to cut down restart processing time. 
+- In essence, a checkpoint helps to eliminate some old log records from the journal 
+- -> it helps speeding up restart processing upon system failures.
+
+`checkpoint` in WAL journal mode
+- Unlike the rollback journaling scheme , the wal journaling scheme needs checkpointing to keep the journal file size in check.
+- SQLite automatically performs a checkpoint when the wal journal file reaches a threshold size of 1000 pages.
+- Checkpoint operations are performed sequentially, mutually exclusively.
+- On each call to checkpointing function, SQLite do following steps
+  1. First , it flushes the wal journal file.
+  2. Second, it transfers some valid page contents to the database file.
+  3. Third, it flushes the database file ( only if the entire wal journal is copied into the database file).
+  4. Fourth, the `salt-1` component of the wal file header is incremented and the salt-2 is randomized (to invalidate the current page log images in the wal journal).
+  5. Fifth, update the wal-index.
+
+checkpoint concurrency
+- a checkpoint operation execution can run concurrently with read-transactions.
+- the checkpoint stops on or before reading the `wal-mark` of any read-transaction (see below).
+- checkpoint remembers how far it has checkpointed; the next checkpoint restarts from there.
+- When the entire wal journal is checkpointed, the journal is rewind to prevent the journal file to grow without bound.
+
+
+
 ## checkpoint_api 
 
 ```c

@@ -49,6 +49,19 @@ This is in contrast to a "rollback" operation, which reverts the database to a p
 - In essence, the name "roll forward" is a metaphor that describes the action of 
 advancing the state of the database by applying changes from a log.
 
+Pros of WAL
+1. fewer flushes of the database,
+2. promotes more concurrency as read-transactions do not block write-transactions and a write-transaction does not block read-transactions.
+3. transaction processing is quite faster in most cases.
+
+Cons of WAL
+1. required memory map support from the operating system.
+2. all applications accessing a database file must run on the same machine.
+3. database files must not be NFS mounted.
+4. multi-database transactions may not be atomic across all databases though atomic in individual databases.
+5. transaction rollback is slightly slower.
+6. need of two additional files (-shm and -wal).
+7. need of checkpointing.
 
 ## References
 - [How SQLite helps you do ACID](https://fly.io/blog/sqlite-internals-rollback-journal/)
