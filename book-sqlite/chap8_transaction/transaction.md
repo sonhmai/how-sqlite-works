@@ -1,12 +1,33 @@
 # Chapter Transaction Management
 
+
+<!-- vscode-markdown-toc -->
+* 1. [Transaction in SQLite](#TransactioninSQLite)
+	* 1.1. [Implement a transaction](#Implementatransaction)
+	* 1.2. [Opcode Transaction](#OpcodeTransaction)
+	* 1.3. [Related code](#Relatedcode)
+	* 1.4. [Read transaction in WAL](#ReadtransactioninWAL)
+	* 1.5. [Write transaction in WAL](#WritetransactioninWAL)
+* 2. [Refs](#Refs)
+
+<!-- vscode-markdown-toc-config
+	numbering=true
+	autoSave=true
+	/vscode-markdown-toc-config -->
+<!-- /vscode-markdown-toc -->
+
 Contents
 1. how SQLite achieves ACID (Atomicity, Consistency, Isolation, Durability)
 2. how SQLite uses locking
 3. how transaction manager (concurrency manager) `Pager` is implemented
 4. how recovery is implemented
 
-## Transaction in SQLite
+why?
+- With atomic commit, it is as if many different writes to different sections of the database file occur instantaneously and simultaneously. Real hardware serializes writes to mass storage, and writing a single sector takes a finite amount of time. So it is impossible to truly write many different sectors of a database file simultaneously and/or instantaneously.
+- the atomic commit logic within SQLite makes it appear as if the changes for a transaction are all written instantaneously and simultaneously.
+
+
+##  1. <a name='TransactioninSQLite'></a>Transaction in SQLite
 
 ```sql
 -- example of 2 transactions in sqlite
@@ -51,7 +72,7 @@ rollback;
 
 ![locking state transition](locking_state_transition.png)
 
-### Implement a transaction
+###  1.1. <a name='Implementatransaction'></a>Implement a transaction
 
 Pager (transaction manager)
 - Pager is transaction manager in sqlite, ensures ACID
@@ -71,7 +92,7 @@ Write path
 Commit protocol
 - default is `flush-log-at-commit` + `flush-database-at-commit`
 
-### Opcode Transaction
+###  1.2. <a name='OpcodeTransaction'></a>Opcode Transaction
 
 `Transaction`: Begin a transaction on database P1 if a transaction is not already active. 
 
@@ -103,7 +124,7 @@ addr  opcode         p1    p2    p3    p4             p5  comment
 5     Goto           0     1     0                    0
 ```
 
-### Related code
+###  1.3. <a name='Relatedcode'></a>Related code
 
 ```c
 // pager.h
@@ -144,7 +165,7 @@ int sqlite3WalBeginWriteTransaction(Wal *pWal);
 int sqlite3WalEndWriteTransaction(Wal *pWal);
 ```
 
-### Read transaction in WAL
+###  1.4. <a name='ReadtransactioninWAL'></a>Read transaction in WAL
 
 ```c
 // pager.c
@@ -170,7 +191,7 @@ static int pagerBeginReadTransaction(Pager *pager) {
 int sqlite3WalBeginReadTransaction(Wal *pWal, int *pChanged)
 ```
 
-### Write transaction in WAL
+###  1.5. <a name='WritetransactioninWAL'></a>Write transaction in WAL
 
 Pager state: WRITER_LOCKED
 
@@ -226,11 +247,11 @@ int sqlite3WalBeginWriteTransaction(Wal *pWal){
 }
 ```
 
-### Write transaction in rollback
+###  1.6. <a name='Writetransactioninrollback'></a>Write transaction in rollback
 
 todo
 
-## Refs
+##  2. <a name='Refs'></a>Refs
 - https://reorchestrate.com/posts/sqlite-transactions/
 - https://www.sqlite.org/lang_transaction.html
 - Transaction bytecode https://www.sqlite.org/opcode.html
