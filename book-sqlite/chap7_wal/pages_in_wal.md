@@ -6,7 +6,9 @@ Checkpoint result
 
 ## mxFrame
 
-In SQLite, checkpoint results number of pages in WAL. This value is taken from the field `mxFrame` of `WalIndexHdr`. It holds the index of last valid frame in the WAL for current transaction.
+In SQLite, number of pages in WAL is returned after checkpoint finishes. 
+This value is taken from the field `mxFrame` of `WalIndexHdr`. 
+It holds the index of last valid frame in the WAL for current transaction.
 
 ```c
 *pnLog = (int)pWal->hdr.mxFrame;

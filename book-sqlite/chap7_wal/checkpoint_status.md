@@ -29,7 +29,6 @@ returning `CheckpointStatus::DONE`
 4. Pager.end_tx -> Result<CheckpointStatus>
 ```
 
-
 ```rust
 // lib.rs: Connection.close
     pub fn close(&self) -> Result<()> {

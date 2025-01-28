@@ -1,9 +1,10 @@
 # Number of pages checkpointed pnCkpt
 
 After checkpointing, SQLite returns `pnCkpt` number of pages checkpointed as a result.
-It is one of the two returning fields
+
+It is one of the two fields that checkpoint returns
 1. `pnLog` number of pages in wal
-2. `pnCkpt` number of pages done moving to db file
+2. `pnCkpt` number of pages done moving to db file -> this one we are talking about
 
 To rewrite these to Rust, we are looking at 
 - how is `pnCkpt` value stored and changed
