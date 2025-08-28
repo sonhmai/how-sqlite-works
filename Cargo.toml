@@ -5,7 +5,7 @@ members = [
     "rsql",
     "btree",
     "vdbe",
-    "vector",
+    "vector", "query-optimizer",
 ]
 resolver = "2"
 
