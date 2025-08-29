@@ -33,12 +33,29 @@ pub trait JoinCostModel {
 pub struct DefaultJoinCostModel;
 
 impl JoinCostModel for DefaultJoinCostModel {
+    
+    /// Hash Join
+    /// - build phase: build smaller input (build side) to hash table `O(left_rows)`
+    /// - probe phase: scan large input, for each tuple compute hash of join key,
+    /// check the hash table -> `O(right_rows)`
+    /// 
+    /// -> total work O(left + right)
+    /// 
+    /// For production, it should consider also
+    /// - memory usage: if hash table not fit in RAM, add IO spill cost (partition + multi-pass join)
+    /// - parallelism: scaled down factor if we have parallelism
     fn hash_join(&self, left_rows: f64, right_rows: f64) -> f64 {
         (left_rows + right_rows)
     }
 
+    /// Nested Loop Join: for each row in outer left table, the entire 
+    /// right tables is scanned for matches -> `O(left_rows x right_rows)` time complexity.
+    /// For example: 1,000 customers × 10 accounts = 10,000 comparisons.
+    /// 
+    /// 0.4 is used as a damping factor to take into account things that
+    /// reduce the NLJ cost e.g. inner table caching.
     fn nested_loop(&self, left_rows: f64, right_rows: f64) -> f64 {
-        0.5 * left_rows * right_rows
+        0.4 * left_rows * right_rows
     }
 
     fn cross_penalty(&self) -> f64 {
@@ -178,11 +195,21 @@ mod tests {
 
     #[test]
     fn prefers_hash_for_large_inputs_with_equi_preds() {
-        let m = DefaultJoinCostModel::default();
-        let left = 1_000_000.0;
-        let right = 800_000.0;
-        let (algo, cost) = choose_join(&m, left, right, true);
+        let cost_model = DefaultJoinCostModel::default();
+        let left_rows = 1_000_000.0;
+        let right_rows = 800_000.0;
+        let (algo, cost) = choose_join(&cost_model, left_rows, right_rows, true);
         assert_eq!(algo, JoinAlgo::Hash);
-        assert!(cost <= m.nested_loop(left, right));
+        assert!(cost <= cost_model.nested_loop(left_rows, right_rows));
+    }
+
+    #[test]
+    fn prefers_nested_loop_for_tiny_inputs_with_equi_preds() {
+        let cost_model = DefaultJoinCostModel::default();
+        let left_rows = 2.0;
+        let right_rows = 10.0;
+        let (algo, cost) = choose_join(&cost_model, left_rows, right_rows, true);
+        assert_eq!(algo, JoinAlgo::NestedLoop);
+        assert!((cost - cost_model.nested_loop(left_rows, right_rows)).abs() < 1e-9);
     }
 }
