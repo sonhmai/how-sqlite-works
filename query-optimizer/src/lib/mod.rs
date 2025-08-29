@@ -9,6 +9,7 @@ pub mod table_stats;
 pub mod query;
 pub mod candidate;
 pub mod join;
+pub mod index;
 
 /// System R Dynamic Programming over join order
 pub fn optimize(query: &Query, cat: &Catalog) -> Candidate {
