@@ -104,6 +104,8 @@ ORDER BY a.balance DESC
 LIMIT 10;
 ```
 
+### Where does SQLite store table stats to be used in optimizer/ planner?
+
 ### How SQLite does predicate push-down?
 TODO
 

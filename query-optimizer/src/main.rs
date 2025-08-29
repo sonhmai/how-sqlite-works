@@ -46,10 +46,10 @@ fn init_catalog_data(catalog: &mut Catalog) {
 
     // Account table
     catalog.stats.insert("Account".to_string(), TableStats {
-        rows: 5_000_000.0,
+        rows: 1_000_000.0,
         row_width: 100.0,
         ndv: HashMap::from([
-            ("account_id".into(), 5_000_000.0),
+            ("account_id".into(), 1_000_000.0),
             ("customer_id".into(), 1_000_000.0),
             ("balance".into(), 1_000_000.0),
         ]),
@@ -66,4 +66,23 @@ fn init_catalog_data(catalog: &mut Catalog) {
             ("amount".into(), 1_000_000.0),
         ]),
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_join_order_optimization() {
+        let mut catalog = Catalog::default();
+        init_catalog_data(&mut catalog);
+        let query = get_query();
+        let best = optimize(&query, &catalog);
+
+        // With the given stats, the most selective predicate is on Customer.
+        // So, the optimizer should start with Customer, join with Account,
+        // and then join with Transaction.
+        let expected_plan = "HashJoin(HashJoin(Customer) ⨝ [Customer.customer_id = Account.customer_id] (Account)) ⨝ [Account.account_id = Transaction.account_id] (Transaction)";
+        assert_eq!(best.plan, expected_plan);
+    }
 }

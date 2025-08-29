@@ -9,6 +9,7 @@ pub mod table_stats;
 pub mod query;
 pub mod candidate;
 pub mod join;
+pub mod index;
 
 /// System R Dynamic Programming over join order
 pub fn optimize(query: &Query, cat: &Catalog) -> Candidate {
@@ -60,7 +61,27 @@ fn init_base_candidates(
     let mut best: HashMap<u64, Candidate> = HashMap::new();
 
     for t in &query.tables {
-        todo!()
+        let stats = cat.get(t);
+        let initial_card = stats.rows;
+
+        let mut selectivity = 1.0;
+        if let Some(filters) = filters_by_table.get(t) {
+            for f in filters {
+                selectivity *= join::filter_selectivity(cat, f);
+            }
+        }
+
+        let card = initial_card * selectivity;
+        // Cost of a table scan is proportional to its number of rows.
+        let cost = card;
+        let mask = 1u64 << index_of[t];
+        let candidate = Candidate {
+            mask,
+            cost,
+            cardinality: card,
+            plan: t.clone(),
+        };
+        best.insert(mask, candidate);
     }
 
     best
@@ -142,7 +163,12 @@ fn best_partition_for_mask(
         );
 
         let total_cost = l_cand.cost + r_cand.cost + jcost;
-        let cand = compose_join_candidate(mask, l_cand, r_cand, &crossing_preds, algo, total_cost, out_rows);
+        let (build, probe) = if l_cand.cardinality < r_cand.cardinality {
+            (l_cand, r_cand)
+        } else {
+            (r_cand, l_cand)
+        };
+        let cand = compose_join_candidate(mask, build, probe, &crossing_preds, algo, total_cost, out_rows);
 
         if best_here.as_ref().map(|c| c.cost).unwrap_or(f64::INFINITY) > cand.cost {
             best_here = Some(cand);
